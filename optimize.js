@@ -37,7 +37,7 @@ function start(){
   api=R.mkScreen('w-optimize','OPTIMIZE','optimize');
   api.stats([{k:'cash',label:'Kassa'},{k:'rows',label:'Rivit',bar:1},{k:'cost',label:'IT-kustannukset'},{k:'save',label:'Säästöt'}]);
   api.el.querySelector('.pz').onclick=()=>running&&pause();
-  R.show('w-optimize');requestAnimationFrame(intro);
+  R.show('w-optimize');requestAnimationFrame(()=>R.rulesFirst('w3',intro));
 }
 function stop(){running=false;cancelAnimationFrame(raf)}
 function intro(){
@@ -45,7 +45,8 @@ function intro(){
   R.showPanel(`<div class="kick">OPTIMIZE · Kierros ${r+1}/5</div><h2>${RD.name}</h2><ul>${RD.news.map(n=>`<li>${n}</li>`).join('')}</ul>
   <div class="tip"><b>Roivon havainto</b>${['Pk-yrityksen IT-kulut kasvavat usein huomaamatta: yksi lisenssi kerrallaan, eri yksiköissä, eri korteilla.','Pitkä sopimus voi olla halpa ensimmäisenä vuonna ja kallis viidentenä. Sopimuksen joustavuus on osa hintaa.','Pilvipalveluiden hinnat muuttuvat. Ilman seurantaa korotus näkyy vasta kirjanpidossa.','Päällekkäiset järjestelmät syntyvät, kun hankintoja tehdään ilman kokonaiskuvaa.','Kun budjetti kiristyy, säästöt löytyvät nopeimmin sieltä, missä on päällekkäisyyttä. Roivo kilpailuttaa IT-toimittajat ja karsii päällekkäisyydet.'][r]}</div>
   <p class="small">Tavoite: ${RD.goal} täyttä riviä. Budjetti ${eur(RD.budget)}/kk. Ohjaus: nuolet, ylös kääntää, välilyönti pudottaa, C kilpailuttaa. Puhelimessa painikkeet tai pyyhkäisy.</p>
-  <div class="row"><button class="btn" id="go">Aloita kierros</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  <div class="row"><button class="btn" id="go">Aloita kierros</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  $('#rl').onclick=()=>R.rules('w3',intro);
   $('#go').onclick=()=>{R.hidePanel();newRound()};$('#toHub').onclick=R.toHub;
 }
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -152,8 +153,8 @@ function finish(){
       `<b>Kilpailutus.</b> Kilpailutit pelissä ${s.swapsUsed} hankintaa. Roivo kilpailuttaa IT-toimittajat ja varmistaa, että sopimus vastaa tarvetta eikä toimittajan vakiotarjousta.`,
       `<b>Jäykät sopimukset.</b> Viiden vuoden sopimus ei kääntynyt pelissäkään. Roivo tekee sopimukset, irtisanomisajat ja uusimispäivät näkyviksi ennen kuin ne sitovat.`]});
 }
-function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Hankintapäätösten aika</h2><p>Peli on pysäytetty. Mieti rauhassa, mihin seuraava hankinta sijoitetaan.</p>${R.note('w3')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rst">Aloita kierros alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
-  $('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#rst').onclick=()=>{SAVE.cash=G.cash0;R.hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;R.persist();R.toHub()}}
+function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Hankintapäätösten aika</h2><p>Peli on pysäytetty. Mieti rauhassa, mihin seuraava hankinta sijoitetaan.</p>${R.note('w3')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="rst">Aloita kierros alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
+  $('#rl').onclick=()=>R.rules('w3',pause);$('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#rst').onclick=()=>{SAVE.cash=G.cash0;R.hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;R.persist();R.toHub()}}
 
 function loop(now){if(!running)return;const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);if(running){draw();raf=requestAnimationFrame(loop)}}
 function update(dt){

@@ -108,5 +108,83 @@ window.RBS_CONTENT={
     share:'Jaa saavutuksesi',
     again:'Pelaa uudelleen'
   },
+
+  // ---------- pelimaailmojen säännöt ----------
+  // icon = kuvake, jonka icons.js piirtää. Kuvakkeet vastaavat pelikentän grafiikkaa.
+  rules:{
+    w1:{name:'Survive',
+      idea:'Ohjaat yrityksen dataketjua. Liiketoiminta kasvaa jokaisesta kolikosta, mutta kasvu tuo mukanaan uusia järjestelmiä ja uhkia. Maailma kuvaa IT-riskejä: varautuminen kannattaa tehdä ennen häiriötä.',
+      goal:'Kerää jokaisella kierroksella tavoitemäärä kolikoita. Kierroksia on viisi. Kierrosten välissä investoit kassasta pysyviin parannuksiin.',
+      fail:'Törmäys seinään, esteeseen, katkoon tai omaan ketjuun vie toimintakykyä, samoin kyberuhan osuma. Kun toimintakyky loppuu, kierros alkaa alusta. Ostetut parannukset säilyvät.',
+      desktop:'Nuolinäppäimet tai WASD. P tai Esc pysäyttää pelin.',
+      mobile:'Pyyhkäise kentällä tai käytä ohjausristiä.',
+      legend:[
+        ['coin','Kolikko','Kasvattaa kassaa ja ketjua. Jokainen kolikko tuo kentälle myös uusia esteitä.'],
+        ['shield','Suojakilpi','Torjuu seuraavan osuman.'],
+        ['bolt','Tuottavuus','Kolikot tuottavat tuplasti 10 sekunnin ajan.'],
+        ['backup','Varmuuskopio','Palauttaa 20 % toimintakykyä.'],
+        ['skill','Osaaminen','Osumien vaikutus puolittuu hetkeksi.'],
+        ['contract','Sopimuskortti','Kerää ennen kuin aika loppuu. Muuten sopimus uusiutuu ja kassasta lähtee rahaa.'],
+        ['block','Uusi järjestelmä','Vilkkuu hetken ja muuttuu pysyväksi esteeksi.'],
+        ['debt','Tekninen velka','Muodostuu kentälle pysyväksi esteeksi.'],
+        ['price','Hintojen nousu','Liikkuu kentällä. Osuma vie kassasta rahaa.'],
+        ['virus','Kyberuhka','Hakeutuu ketjun luo. Osuma vie toimintakykyä.'],
+        ['outage','Järjestelmäkatko','Alue suljetaan hetkeksi. Varoitus vilkkuu ennen katkoa.']
+      ]},
+    w2:{name:'Connect',
+      idea:'Rakennat putkiston, jota pitkin tieto kulkee järjestelmästä toiseen. Maailma kuvaa integraatioita ja tuottavuutta: kun järjestelmät eivät keskustele keskenään, tieto siirretään käsin.',
+      goal:'Johda jokainen tietovirta saman väriseen kohdejärjestelmään. Prosesseja on viisi. Kierrosten välissä investoit kassasta pysyviin parannuksiin.',
+      fail:'Jos tieto päätyy putken päähän, tyhjään ruutuun, Excel-siirtoon tai väärään järjestelmään, se vuotaa käsityöksi ja prosessi alkaa alusta.',
+      desktop:'Klikkaa ruutua: seuraava pala asettuu siihen. Välilyönti käynnistää virtauksen tai kiihdyttää sitä. S ohittaa palan. P tai Esc pysäyttää pelin.',
+      mobile:'Napauta ruutua. Alapalkin painikkeista käynnistät virtauksen ja ohitat palan.',
+      legend:[
+        ['src','Lähdejärjestelmä','Tieto lähtee tästä. Väri kertoo, mihin kohteeseen tieto kuuluu.'],
+        ['tgt','Kohdejärjestelmä','Tiedon pitää päätyä saman väriseen kohteeseen.'],
+        ['pipeH','Suora pala','Vie tiedon suoraan läpi.'],
+        ['pipeC','Kulmapala','Kääntää tiedon suuntaa.'],
+        ['pipeX','Risteys','Kaksi virtaa voi kulkea toistensa läpi.'],
+        ['flow','Virtaus','Lähtee liikkeelle, kun aika loppuu. Etuajassa käynnistys tuo bonuksen.'],
+        ['excel','Excel-siirto','Manuaalinen siirto. Putkea ei voi rakentaa sen läpi.'],
+        ['legacy','Vanha järjestelmä','Este yritysostokierroksella.']
+      ],
+      extra:'Valmiin palan voi korvata, mutta se maksaa. Tehokkuus laskee jokaisesta palasta, jonka läpi tieto ei kulje.'},
+    w3:{name:'Optimize',
+      idea:'Putoavat palikat ovat yrityksen IT-hankintoja. Järjestät ne niin, että päällekkäisyydet poistuvat ja kustannukset pysyvät budjetissa. Maailma kuvaa IT-kustannusten hallintaa ja kilpailutusta.',
+      goal:'Täytä kierroksen tavoitemäärä rivejä. Täysi rivi poistaa päällekkäisiä kustannuksia ja tuo säästöjä. Kierroksia on viisi.',
+      fail:'Jos uusi hankinta ei mahdu kentälle, IT-kokonaisuus kaatuu ja kierros alkaa alusta. Budjetin ylitys puolittaa rivien säästöt.',
+      desktop:'Nuolet liikuttavat, ylänuoli kääntää, alanuoli pudottaa nopeammin ja välilyönti pudottaa heti. C kilpailuttaa hankinnan. P tai Esc pysäyttää pelin.',
+      mobile:'Käytä alapalkin painikkeita. Kentällä napautus kääntää, sivuttaispyyhkäisy liikuttaa ja alaspyyhkäisy pudottaa.',
+      legend:[
+        ['p_dev','Laite','40 €/kk.'],
+        ['p_lic','Lisenssi','60 €/kk.'],
+        ['p_cloud','Pilvipalvelu','80 €/kk.'],
+        ['p_team','Tiimisovellus','100 €/kk.'],
+        ['p_db','Tietokanta','120 €/kk.'],
+        ['p_contract','Jäykkä 5 v sopimus','150 €/kk. Ei käänny.'],
+        ['p_debt','Tekninen velka','Nousee pohjalle kerroksena, jossa on yksi aukko.'],
+        ['p_price','Hinnannousu','Putoaa kentälle ja nostaa kustannuksia 50 €/kk.']
+      ],
+      extra:'Kilpailutus vaihtaa nykyisen hankinnan toiseen. Kilpailutuksia on rajallisesti jokaisella kierroksella.'},
+    w4:{name:'Defend & Grow',
+      idea:'Rakennat yrityksen neljälle toiminnolle suojauksia ja kehittämistoimia. Uhat tulevat kaistoja pitkin kohti yritystä. Maailma kokoaa yhteen aiempien maailmojen opit: IT-johtaminen on investointien kohdistamista sinne, missä riski tai hyöty on suurin.',
+      goal:'Torju kahdeksan aaltoa. Viimeisessä aallossa kyberhäiriö, kustannusten nousu ja kysyntäpiikki tulevat yhtä aikaa.',
+      fail:'Kaistan päähän päässyt uhka vie toimintakykyä. Kun toimintakyky loppuu, aalto alkaa alusta. Hinnannousu vie kassasta rahaa.',
+      desktop:'Valitse ratkaisu alapalkista tai numeroilla 1–6 ja klikkaa paikkaa kaistalla. Välilyönti aloittaa aallon. Klikkaa rakennettua ratkaisua, jos haluat myydä sen. P tai Esc pysäyttää pelin.',
+      mobile:'Valitse ratkaisu alapalkista ja napauta paikkaa kaistalla.',
+      legend:[
+        ['t_sec','Tietoturva','Torjuu uhkia omalla kaistallaan. Tehokkain kyberhyökkäyksiä vastaan.'],
+        ['t_bak','Varmistus','Kestää iskuja ja palautuu itsestään.'],
+        ['t_edu','Koulutus','Hidastaa uhkia ja pysäyttää tietojenkalastelun.'],
+        ['t_auto','Automaatio','Tuottaa rahaa aaltojen aikana.'],
+        ['t_lead','IT-johtaminen','Vahvistaa kaistan kaikkia ratkaisuja 30 %. Yksi kaistaa kohden.'],
+        ['t_comp','Kilpailutus','Pysäyttää hinnannousut ja muuttaa ne säästöiksi.'],
+        ['e_kyber','Kyberhyökkäys','Tavallinen uhka.'],
+        ['e_phish','Tietojenkalastelu','Nopea mutta heikko.'],
+        ['e_vika','Järjestelmävika','Hidas ja kestävä.'],
+        ['price','Hinnannousu','Kulkee suojausten läpi. Vain kilpailutus pysäyttää sen.'],
+        ['e_boss','Laaja kyberhäiriö','Viimeisen aallon pääuhka.']
+      ],
+      extra:'Aiemmat maailmat vaikuttavat: Surviven tietoturvainvestoinnit tehostavat Tietoturvaa, läpäisty Connect nostaa Automaation tuottoa ja läpäisty Optimize laskee hintoja.'}
+  },
   cardTagline:'IT-johtamisen asiantuntijatalo'
 };

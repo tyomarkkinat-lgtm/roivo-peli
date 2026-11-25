@@ -18,7 +18,8 @@ ROIVO Business Survival – julkaisuohje
        rbs_upgrade          kaupasta ostettu parannus
        rbs_share_copy       jakoteksti kopioitu
        rbs_card_download    tuloskortti ladattu
-       rbs_roivo_info       "Mikä Roivo on" avattu
+       rbs_roivo_info       "Tutustu Roivoon" avattu
+       rbs_rules            pelimaailman säännöt avattu
        rbs_cta_pikatesti    pikatestilinkkiä klikattu
        rbs_cta_roivo        roivo.fi-linkkiä klikattu
        rbs_replay           maailma pelattu uudelleen tulossivulta
@@ -26,7 +27,7 @@ ROIVO Business Survival – julkaisuohje
    - Jos käytössä on Google Tag Manager, samat tapahtumat menevät myös dataLayeriin.
 
 3. Tekstit
-   - Roivon esittely, palvelut, Roivo Notes, järjestelmälokin viestit, palvelukytkennät ja tulossivun huomiot
+   - Pelimaailmojen säännöt (rules), Roivon esittely, palvelut, Roivo Notes, järjestelmälokin viestit, palvelukytkennät ja tulossivun huomiot
      ovat tiedostossa content.js. Niitä voi muokata koskematta pelilogiikkaan.
    - Pikatestin ja roivo.fi:n osoitteet ovat content.js-tiedoston alussa (links).
 

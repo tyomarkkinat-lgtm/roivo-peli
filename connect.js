@@ -33,7 +33,7 @@ function start(){
   api=R.mkScreen('w-connect','CONNECT','connect');
   api.stats([{k:'cash',label:'Kassa'},{k:'cd',label:'Virtaus alkaa'},{k:'eff',label:'Tehokkuus',bar:1},{k:'proc',label:'Käsitellyt'}]);
   api.el.querySelector('.pz').onclick=()=>running&&pause();
-  R.show('w-connect');requestAnimationFrame(intro);
+  R.show('w-connect');requestAnimationFrame(()=>R.rulesFirst('w2',intro));
 }
 function stop(){running=false;cancelAnimationFrame(raf)}
 function intro(){
@@ -41,7 +41,8 @@ function intro(){
   R.showPanel(`<div class="kick">CONNECT · Prosessi ${r+1}/5</div><h2>${RD.name}</h2><ul>${RD.news.map(n=>`<li>${n}</li>`).join('')}</ul>
   <div class="tip"><b>Roivon havainto</b>${['Kun järjestelmät eivät keskustele keskenään, tieto kulkee ihmisten kautta: kopioimalla, liittämällä ja sähköpostilla.','Jokainen manuaalinen tiedonsiirto on piilokustannus ja virheen paikka. Ne löytyvät, kun prosessi kartoitetaan.','Integraatio ilman omistajaa toimii, kunnes jokin muuttuu. Sen jälkeen kukaan ei tiedä, kenen asia korjaus on.','Automaatio kannattaa rakentaa vasta, kun prosessi on selvä. Muuten automatisoidaan sekava tapa toimia.','Yritysostossa järjestelmien yhteensopivuus selviää usein vasta kaupan jälkeen. Roivon IT360-kartoitus tekee sen näkyväksi etukäteen.'][r]}</div>
   <p class="small">Napauta tai klikkaa ruutua asettaaksesi seuraavan palan. Kun putki on valmis, käynnistä virtaus itse ja saat bonuksen jäljellä olevasta ajasta.</p>
-  <div class="row"><button class="btn" id="go">Aloita prosessi</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  <div class="row"><button class="btn" id="go">Aloita prosessi</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  $('#rl').onclick=()=>R.rules('w2',intro);
   $('#go').onclick=()=>{R.hidePanel();newRound()};$('#toHub').onclick=R.toHub;
 }
 function rnd(n){return Math.floor(Math.random()*n)}
@@ -166,8 +167,8 @@ function finish(){
       `<b>Prosessikartoitus.</b> ${lv('map')?'Purit esteitä ennen rakentamista.':'Rakensit esteiden ympäri ilman kartoitusta.'} Roivon IT360-kartoitus näyttää, missä tieto pysähtyy ja mitkä järjestelmät eivät keskustele keskenään.`,
       `<b>Omistajuus.</b> Pelissä yksi vuoto pysäytti koko prosessin. Roivo määrittää jokaiselle integraatiolle omistajan, jotta vika korjataan ennen kuin työjono kasvaa.`]});
 }
-function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Prosessi pysäytetty</h2>${R.note('w2')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rst">Aloita prosessi alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
-  $('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#rst').onclick=()=>{SAVE.cash=G.cash0;R.hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;R.persist();R.toHub()}}
+function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Prosessi pysäytetty</h2>${R.note('w2')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="rst">Aloita prosessi alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
+  $('#rl').onclick=()=>R.rules('w2',pause);$('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#rst').onclick=()=>{SAVE.cash=G.cash0;R.hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;R.persist();R.toHub()}}
 
 // ---------- syöte ----------
 function cellAt(e){const r=api.cv.getBoundingClientRect(),lx=(e.clientX-r.left)/G.sc-G.L.qW,ly=(e.clientY-r.top)/G.sc-G.L.qH;return[Math.floor(lx/S_),Math.floor(ly/S_)]}

@@ -69,6 +69,13 @@ a.btn{display:inline-flex;align-items:center;text-decoration:none}
 .dims .tr{height:8px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}.dims .tr i{display:block;height:100%}
 .dims b{text-align:right;white-space:nowrap}
 details.more{margin-top:14px}details.more summary{cursor:pointer;color:var(--peach);font-weight:700;min-height:32px}
+.rules3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:10px;margin:14px 0}
+.rules3 div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(11,6,40,.55);font-size:15px}
+.rules3 b{display:block;color:var(--gold);font-size:13px;margin-bottom:2px}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:8px 14px;margin-top:10px}
+.legend div{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center;font-size:14px;line-height:1.35}
+.legend img{width:44px;height:44px;border-radius:9px}.legend b{color:var(--peach)}
+.rulesbtn{margin-left:8px}
 .tip{margin:14px 0 4px;padding:12px 14px;border-radius:12px;background:rgba(143,201,174,.1);border-left:3px solid var(--green);font-size:15px}.tip b{display:block;color:var(--green);font-size:13px;margin-bottom:2px}
 #boot{position:fixed;inset:0;z-index:20;background:#07031c;display:grid;place-items:center;padding:20px;cursor:pointer}
 #boot pre{font:15px/1.7 "JetBrains Mono",monospace;color:var(--peach);white-space:pre-wrap;max-width:680px;width:100%;margin:0}
@@ -199,6 +206,7 @@ details.more{margin-top:14px}details.more summary{cursor:pointer;color:var(--pea
 <div class="ov" id="ov"><div class="panel" id="panel"></div></div>
 
 <script src="content.js"></script>
+<script src="icons.js"></script>
 <script>
 {
 // ---------- asetukset ----------
@@ -269,7 +277,7 @@ function renderHub(){
   $('#worlds').innerHTML=WORLDS.map((x,i)=>{
     const w=SAVE[x.k],open=isOpen(x.k);let act='';
     if(open){act=w.done?`<span class="meta">Läpäisty · ${(w.best||0).toLocaleString('fi-FI')} pistettä</span><button class="btn" data-play="replay" data-w="${x.k}">Pelaa uudelleen</button>`
-      :w.round>0?`<button class="btn" data-play="cont" data-w="${x.k}">Jatka: ${x.unit.toLowerCase()} ${w.round+1}/${x.rounds}</button>`:`<button class="btn" data-play="new" data-w="${x.k}">Pelaa</button>`}
+      :w.round>0?`<button class="btn" data-play="cont" data-w="${x.k}">Jatka: ${x.unit.toLowerCase()} ${w.round+1}/${x.rounds}</button>`:`<button class="btn" data-play="new" data-w="${x.k}">Pelaa</button>`;act+=`<button class="chip rulesbtn" data-rules="${x.k}">Säännöt</button>`}
     else act=`<span class="meta">Avautuu ${new Date(RELEASE[x.k]).toLocaleDateString('fi-FI')}. Kassa siirtyy tähän maailmaan.</span>`;
     return `<article class="card${open?'':' locked'}"><div class="thumb" style="background-image:url(assets/${x.img}.webp)"></div>${open?'':`<span class="lockbadge">Avautuu viikolla ${i+1}</span>`}<div class="body"><span class="meta">${x.n} · ${x.min}</span><h3>${x.name}</h3><span>${x.sub}</span><div class="act">${act}</div></div></article>`}).join('');
 }
@@ -279,7 +287,7 @@ function playWorld(k,mode){
   track(mode==='cont'?'continue':(mode==='again'?'replay':'start'),{world:+k[1]});hidePanel();
   if(k==='w1')startWorld();else{const m=window.RBS.worlds[k];if(m)m.start()}
 }
-$('#worlds').addEventListener('click',e=>{const b=e.target.closest('[data-play]');if(!b)return;playWorld(b.dataset.w,b.dataset.play)});
+$('#worlds').addEventListener('click',e=>{const rb=e.target.closest('[data-rules]');if(rb){SAVE.seen=SAVE.seen||{};SAVE.seen[rb.dataset.rules]=1;persist();return rules(rb.dataset.rules)}const b=e.target.closest('[data-play]');if(!b)return;playWorld(b.dataset.w,b.dataset.play)});
 $('#reset').addEventListener('click',()=>{showPanel(`<div class="kick">Tallennus</div><h2>Aloitetaanko alusta</h2><p>Kassa, ostetut parannukset ja edistyminen nollataan tästä selaimesta.</p><div class="row"><button class="btn" id="rsY">Nollaa</button><button class="btn ghost" id="rsN">Peruuta</button></div>`);
   $('#rsY').onclick=()=>{const f=fresh();for(const k in SAVE)delete SAVE[k];Object.assign(SAVE,f);persist();hidePanel();renderHub()};$('#rsN').onclick=hidePanel});
 
@@ -288,7 +296,7 @@ $('#reset').addEventListener('click',()=>{showPanel(`<div class="kick">Tallennus
  const loop=()=>{if($('#hub').classList.contains('on')){x.clearRect(0,0,c.width,c.height);x.fillStyle='rgba(255,236,220,.75)';for(const p of f){p.y+=p.s;p.d+=.01;p.x+=Math.sin(p.d)*.3;if(p.y>c.height){p.y=-4;p.x=Math.random()*c.width}x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()}}else x.clearRect(0,0,c.width,c.height);requestAnimationFrame(loop)};loop()}
 
 // ---------- overlay ----------
-function showPanel(html,wide){const p=$('#panel');p.className='panel'+(wide?' wide':'');p.innerHTML=html;$('#ov').classList.add('on');const b=p.querySelector('.btn');b&&b.focus()}
+function showPanel(html,wide){const p=$('#panel');p.className='panel'+(wide?' wide':'');p.innerHTML=html;$('#ov').classList.add('on');$('#ov').scrollTop=0;const b=p.querySelector('.btn');b&&b.focus({preventScroll:true})}
 function hidePanel(){$('#ov').classList.remove('on')}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
 
@@ -310,12 +318,12 @@ function layout(){
   g.setTransform(DPR,0,0,DPR,0,0);
 }
 
-function startWorld(){show('play');requestAnimationFrame(()=>{layout();roundIntro()})}
+function startWorld(){show('play');requestAnimationFrame(()=>{layout();rulesFirst('w1',roundIntro)})}
 
 function roundIntro(){
   const r=SAVE.w1.round,R=ROUNDS[r];
-  showPanel(`<div class="kick">SURVIVE · Kierros ${r+1}/5</div><h2>${R.name}</h2><ul>${R.news.map(n=>`<li>${n}</li>`).join('')}</ul><div class="tip"><b>Roivon havainto</b>${TIPS[r]}</div><p class="small">Tavoite: kerää ${R.goal} kolikkoa. Ohjaus nuolinäppäimillä, WASD-näppäimillä tai pyyhkäisemällä.</p><div class="row"><button class="btn" id="go">Aloita kierros</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
-  $('#go').onclick=()=>{hidePanel();newRound()};$('#toHub').onclick=toHub;
+  showPanel(`<div class="kick">SURVIVE · Kierros ${r+1}/5</div><h2>${R.name}</h2><ul>${R.news.map(n=>`<li>${n}</li>`).join('')}</ul><div class="tip"><b>Roivon havainto</b>${TIPS[r]}</div><p class="small">Tavoite: kerää ${R.goal} kolikkoa. Ohjaus nuolinäppäimillä, WASD-näppäimillä tai pyyhkäisemällä.</p><div class="row"><button class="btn" id="go">Aloita kierros</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  $('#go').onclick=()=>{hidePanel();newRound()};$('#toHub').onclick=toHub;$('#rl').onclick=()=>rules('w1',roundIntro);
 }
 function toHub(){running=false;if(window.RBS)for(const k in RBS.worlds)RBS.worlds[k].stop&&RBS.worlds[k].stop();cancelAnimationFrame(raf);hidePanel();show('hub');renderHub()}
 
@@ -410,7 +418,8 @@ $('#mute').onclick=()=>{muted=!muted;$('#mute').style.opacity=muted?.4:1};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)pause()});
 addEventListener('resize',()=>{if(running||G){const old=[COLS,ROWS];layout();if(G&&(old[0]!==COLS||old[1]!==ROWS)&&running){/* kentän muoto vaihtui: aloita kierros uudelleen */running=false;SAVE.cash=G.cash0;roundIntro()}else if(G)draw(0)}});
 
-function pause(){running=false;showPanel(`<div class="kick">Tauko</div><h2>Peli pysäytetty</h2><p>Kierros ${G.r+1}/5 · Kassa ${eur(SAVE.cash)} · Toimintakyky ${Math.round(G.hp)} %</p>${note('w1')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rst">Aloita kierros alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
+function pause(){running=false;showPanel(`<div class="kick">Tauko</div><h2>Peli pysäytetty</h2><p>Kierros ${G.r+1}/5 · Kassa ${eur(SAVE.cash)} · Toimintakyky ${Math.round(G.hp)} %</p>${note('w1')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="rst">Aloita kierros alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
+  $('#rl').onclick=()=>rules('w1',pause);
   $('#res').onclick=()=>{hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};
   $('#rst').onclick=()=>{SAVE.cash=G.cash0;hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;persist();toHub()}}
 
@@ -811,6 +820,21 @@ $('#aboutBtn').onclick=aboutPanel;
 $('#tagline').textContent=C.hub.tagline;$('#aboutTxt').textContent=C.hub.about;$('#aboutBtn').textContent=C.hub.more;
 $('#svcList').innerHTML=C.hub.services.map(()=>'<li></li>').join('');[...$('#svcList').children].forEach((li,i)=>li.textContent=C.hub.services[i]);
 
+// ---------- säännöt ----------
+function rules(wk,back){
+  const r=C.rules[wk],esc=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const touch=matchMedia('(pointer:coarse)').matches;
+  showPanel(`<div class="kick">SÄÄNNÖT · ${esc(r.name.toUpperCase())}</div><h2>${esc(r.name)}</h2><p>${esc(r.idea)}</p>
+  <div class="rules3"><div><b>Tavoite</b>${esc(r.goal)}</div><div><b>Kun epäonnistut</b>${esc(r.fail)}</div><div><b>Ohjaus ${touch?'puhelimella':'tietokoneella'}</b>${esc(touch?r.mobile:r.desktop)}</div></div>
+  <h3 style="font-size:19px;color:var(--peach);margin-top:6px">Kentällä</h3>
+  <div class="legend">${r.legend.map(([k,n,t])=>`<div><img alt="" src="${window.RBS_ICON?RBS_ICON(k):''}"><span><b>${esc(n)}.</b> ${esc(t)}</span></div>`).join('')}</div>
+  ${r.extra?`<p class="small" style="margin-top:12px">${esc(r.extra)}</p>`:''}
+  <div class="row"><button class="btn" id="rulesOk">Selvä</button></div>`,true);
+  track('rules',{world:+wk[1]});
+  $('#rulesOk').onclick=()=>{hidePanel();back&&back()};
+}
+function rulesFirst(wk,next){SAVE.seen=SAVE.seen||{};if(SAVE.seen[wk])return next();SAVE.seen[wk]=1;persist();rules(wk,next)}
+
 // ---------- Roivo Notes ----------
 function note(wk){
   const all=C.notes.map((n,i)=>({...n,i})),pool=all.filter(n=>!wk||n.w.includes(wk));
@@ -841,7 +865,7 @@ function track(ev,props={}){
    setTimeout(add,c==='lead'||c==='note'?900:240)};
  add();boot.addEventListener('click',close);addEventListener('keydown',close,{once:true});setTimeout(close,8000)}
 
-window.RBS={C,note,svcLine,aboutPanel,SAVE,persist,track,showPanel,hidePanel,show,eur,SFX,DIFF,LEVELS,TIPS,PIKATESTI_URL,worldEnd,mkScreen,fitCanvas,shop2,wfresh,shieldPath,rr,$,worlds:{},
+window.RBS={rules,rulesFirst,C,note,svcLine,aboutPanel,SAVE,persist,track,showPanel,hidePanel,show,eur,SFX,DIFF,LEVELS,TIPS,PIKATESTI_URL,worldEnd,mkScreen,fitCanvas,shop2,wfresh,shieldPath,rr,$,worlds:{},
   toHub:()=>{for(const k in window.RBS.worlds)window.RBS.worlds[k].stop&&window.RBS.worlds[k].stop();toHub()},get muted(){return muted}};
 renderHub();
 }

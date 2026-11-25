@@ -36,7 +36,7 @@ function start(){
   api=R.mkScreen('w-defend','DEFEND & GROW','town');
   api.stats([{k:'cash',label:'Kassa'},{k:'hp',label:'Toimintakyky',bar:1},{k:'wave',label:'Aalto'},{k:'value',label:'Yrityksen arvo'}]);
   api.el.querySelector('.pz').onclick=()=>running&&pause();
-  R.show('w-defend');requestAnimationFrame(()=>W4().round>0&&W4().snap?resumeWorld():intro());
+  R.show('w-defend');requestAnimationFrame(()=>R.rulesFirst('w4',()=>W4().round>0&&W4().snap?resumeWorld():intro()));
 }
 function stop(){running=false;cancelAnimationFrame(raf)}
 function legacy(){ // aiempien maailmojen vaikutus
@@ -53,7 +53,8 @@ function intro(){
   <div class="tip"><b>Aiempien maailmojen vaikutus</b>${L.lines.join('<br>')}</div>
   ${R.note('w4')}
   <p class="small">Aloituskassa vähintään ${eur(min)}, vaikka aiemmat maailmat olisivat kesken.</p>
-  <div class="row"><button class="btn" id="go">Aloita</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  <div class="row"><button class="btn" id="go">Aloita</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  $('#rl').onclick=()=>R.rules('w4',intro);
   $('#go').onclick=()=>{R.hidePanel();newGame()};$('#toHub').onclick=R.toHub;
 }
 function layout(){const st=api.stage,land=st.clientWidth>=st.clientHeight*.85;return land?{land,W:980,H:560}:{land,W:540,H:900}}
@@ -174,8 +175,8 @@ function finish(){
       `<b>IT-johtaminen.</b> ${sb.lead?'Johtaminen vahvisti kaistojen kaikkia ratkaisuja.':'Et rakentanut IT-johtamista, joten ratkaisut toimivat erillään.'} Roivon IT-johtaja palveluna tuo saman yritykseen: rahat ja työ kohdistuvat sinne, missä riski tai hyöty on suurin.`,
       `<b>Aiemmat päätökset.</b> ${G.B.lines.filter(l=>!l.includes('kesken')).length} aiemman maailman investoinnit vaikuttivat tähän maailmaan. IT-päätökset kasautuvat, hyvässä ja huonossa.`]});
 }
-function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Peli pysäytetty</h2>${R.note('w4')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="hb">Tallenna ja poistu</button></div>`);
-  $('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#hb').onclick=()=>{if(G.phase==='wave'){const s=W4().snap;if(s)SAVE.cash=s.cash}R.persist();R.toHub()}}
+function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Peli pysäytetty</h2>${R.note('w4')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="hb">Tallenna ja poistu</button></div>`);
+  $('#rl').onclick=()=>R.rules('w4',pause);$('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#hb').onclick=()=>{if(G.phase==='wave'){const s=W4().snap;if(s)SAVE.cash=s.cash}R.persist();R.toHub()}}
 
 // ---------- syöte ----------
 addEventListener('pointerdown',e=>{if(!G||!running||!api||e.target!==api.cv)return;
