@@ -1,0 +1,35 @@
+ROIVO Business Survival – julkaisuohje
+
+1. Julkaisu omaan osoitteeseen
+   - Helpoin tapa: Netlify Drop (app.netlify.com/drop). Raahaa koko kansio sivulle, ja peli on heti verkossa.
+   - Liitä oma aliosoite, esim. peli.roivo.fi, Netlifyn Domain settings -kohdasta. Domainin DNS:ään lisätään CNAME-tietue.
+
+2. Kävijäseuranta (Plausible)
+   - Luo Plausibleen sivusto, jonka nimi on pelin osoite (esim. peli.roivo.fi).
+   - Avaa index.html ja kirjoita sama osoite kohtaan: const PLAUSIBLE_DOMAIN='peli.roivo.fi';
+   - Plausible laskee käynnit automaattisesti. Lisäksi peli lähettää nämä tapahtumat:
+       rbs_open             peli avattu (käynnistysruutu ohitettu)
+       rbs_start            maailma aloitettu (ominaisuus world = 1–4)
+       rbs_continue         keskeneräistä maailmaa jatkettu
+       rbs_round_complete   kierros läpäisty (world, round, secs)
+       rbs_round_fail       kierros epäonnistui
+       rbs_world_complete   maailma läpäisty (world, score, mins)
+       rbs_game_complete    kaikki neljä maailmaa läpäisty
+       rbs_upgrade          kaupasta ostettu parannus
+       rbs_share_copy       jakoteksti kopioitu
+       rbs_card_download    tuloskortti ladattu
+       rbs_roivo_info       "Mikä Roivo on" avattu
+       rbs_cta_pikatesti    pikatestilinkkiä klikattu
+       rbs_cta_roivo        roivo.fi-linkkiä klikattu
+       rbs_replay           maailma pelattu uudelleen tulossivulta
+   - Lisää tapahtumat Plausiblessa kohtaan Goals > Custom event, niin ne näkyvät raportissa.
+   - Jos käytössä on Google Tag Manager, samat tapahtumat menevät myös dataLayeriin.
+
+3. Tekstit
+   - Roivon esittely, palvelut, Roivo Notes, järjestelmälokin viestit, palvelukytkennät ja tulossivun huomiot
+     ovat tiedostossa content.js. Niitä voi muokata koskematta pelilogiikkaan.
+   - Pikatestin ja roivo.fi:n osoitteet ovat content.js-tiedoston alussa (links).
+
+4. Muut asetukset index.html-tiedoston alussa
+   - RELEASE: maailmojen julkaisupäivät, esim. w2:'2026-12-02'. null = auki heti.
+     Osoitteen perään lisätty #esikatselu avaa kaikki maailmat testausta varten.

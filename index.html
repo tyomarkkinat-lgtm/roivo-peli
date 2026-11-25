@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>ROIVO Business Survival</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Figtree:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* VOICE: kuiva IT-huumori, johdon kieli, ei huutomerkkejä
+   IDEA: talvinen etsausjuliste, josta tulee pelikone (ROIVO_OS)
+   PICTURE: pelikenttä itse, Roivon etsauskuvitus taustalla
+   COLOUR and TYPE: navy #0B0628, terrakotta #DC7B60, persikka #FFC99C, kolikko #E5B65D, kehitys #8FC9AE; Cinzel + Figtree + JetBrains Mono lokiin
+   LAYOUT: HUD ylhäällä, kenttä keskellä, järjestelmäloki alhaalla, puhelimessa ohjausristi */
+:root{color-scheme:dark;--navy:#0B0628;--navy2:#160f3a;--terra:#DC7B60;--peach:#FFC99C;--gold:#E5B65D;--green:#8FC9AE;--ink:#f6e7da;--mute:#b9a3a0;--line:rgba(255,201,156,.22)}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;height:100%;background:var(--navy);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer}
+.screen{position:fixed;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+.bgimg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:-1}
+.bgimg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(11,6,40,.55),rgba(11,6,40,.92))}
+h1,h2,h3{font-family:Cinzel,serif;margin:0;line-height:1.05;letter-spacing:.02em;text-wrap:balance}
+.btn{min-height:46px;padding:10px 22px;border-radius:12px;border:1px solid var(--peach);background:linear-gradient(180deg,#e88d72,#c9654b);color:#1b0f22;font-weight:800;box-shadow:0 0 18px rgba(220,123,96,.35)}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.btn:hover{filter:brightness(1.08)}.btn:focus-visible,.chip:focus-visible,.card:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--peach);box-shadow:none}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.6)}
+/* HUB */
+#hub{overflow-y:auto}
+.hubwrap{width:min(1180px,100%);margin:0 auto;padding:clamp(18px,4vw,48px) max(4vw,14px) 40px}
+.brand{text-align:center;margin-bottom:22px}
+.brand h1{font-size:clamp(42px,8vw,86px);color:var(--peach);text-shadow:0 0 28px rgba(220,123,96,.45)}
+.brand h2{font-size:clamp(17px,3vw,30px);letter-spacing:.32em;color:var(--peach);margin-top:4px}
+.brand p{color:var(--mute);margin:12px 0 0}
+.diff{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0 6px}
+.chip{min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(22,15,58,.75);color:var(--ink)}
+.chip[aria-pressed=true]{border-color:var(--peach);background:rgba(220,123,96,.25);color:var(--peach);font-weight:700}
+.diffnote{text-align:center;color:var(--mute);font-size:14px;min-height:22px}
+.worlds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:16px;margin-top:20px}
+.card{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:rgba(14,9,44,.85);text-align:left;color:var(--ink);padding:0;display:flex;flex-direction:column}
+.card .thumb{aspect-ratio:16/9;background-size:cover;background-position:center}
+.card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-size:22px;color:var(--peach)}
+.card .meta{font-size:13px;color:var(--mute)}
+.card .act{margin-top:auto;padding-top:8px}
+.card.locked .thumb{filter:grayscale(.7) brightness(.5)}
+.lockbadge{position:absolute;top:10px;right:10px;background:rgba(11,6,40,.85);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;color:var(--peach)}
+.about{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;justify-content:center;margin:20px auto 0;max-width:900px;padding:14px 18px;border:1px solid var(--line);border-radius:14px;background:rgba(11,6,40,.78)}
+.about p{margin:0;flex:1 1 100%;font-size:15px;text-align:center}.about b{color:var(--peach)}
+.about ul{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}.about li{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid var(--green);color:var(--green)}
+.note{margin:14px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(7,3,28,.65)}
+.note .nh{display:block;font:500 12px/1.4 "JetBrains Mono",monospace;color:var(--gold);margin-bottom:4px}
+.note p{margin:0;font-size:16px;color:#f6e7da}
+.bootnote{display:block;margin:14px 0;font-family:Figtree,sans-serif;white-space:normal}.bootnote .note{margin:0}
+.svc{display:inline-block;font-size:12px;color:var(--green);border:1px solid rgba(143,201,174,.5);border-radius:999px;padding:1px 8px;align-self:flex-start}
+.dims{display:grid;gap:8px;margin:14px 0}.dims div{display:grid;grid-template-columns:minmax(0,10em) 1fr 3.5em;gap:10px;align-items:center;font-size:14px}
+.dims .tr{height:8px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}.dims .tr i{display:block;height:100%}
+.dims b{text-align:right;white-space:nowrap}
+details.more{margin-top:14px}details.more summary{cursor:pointer;color:var(--peach);font-weight:700;min-height:32px}
+.tip{margin:14px 0 4px;padding:12px 14px;border-radius:12px;background:rgba(143,201,174,.1);border-left:3px solid var(--green);font-size:15px}.tip b{display:block;color:var(--green);font-size:13px;margin-bottom:2px}
+#boot{position:fixed;inset:0;z-index:20;background:#07031c;display:grid;place-items:center;padding:20px;cursor:pointer}
+#boot pre{font:15px/1.7 "JetBrains Mono",monospace;color:var(--peach);white-space:pre-wrap;max-width:680px;width:100%;margin:0}
+#boot .ok{color:var(--green)}#boot .lead{color:#f6e7da;font-family:Figtree,sans-serif;font-size:19px;line-height:1.45;display:block;margin:12px 0}
+#boot .hint{color:var(--mute);font-size:13px}
+.foot{display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;margin-top:26px;color:var(--mute);font-size:14px}
+.foot b{color:var(--gold)}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:0}
+#hub .hubwrap{position:relative;z-index:1}
+/* PLAY */
+#play{background:var(--navy)}
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:10px max(2vw,10px);border-bottom:1px solid var(--line);background:rgba(11,6,40,.88);position:relative;z-index:2}
+.hud .title{font-family:Cinzel,serif;font-weight:800;color:var(--peach);font-size:18px}
+.hud .round{font-size:14px;color:var(--mute)}
+.stat{display:flex;flex-direction:column;line-height:1.1}
+.stat small{font-size:12px;color:var(--mute)}.stat b{font-size:18px;white-space:nowrap}
+.bar{width:110px;height:8px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--green);transition:width .2s}
+.hud .sp{flex:1}
+.iconbtn{min-width:44px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--peach)}
+.buffs{display:flex;gap:6px;font-size:13px}
+.buff{padding:2px 8px;border-radius:999px;border:1px solid var(--green);color:var(--green)}
+.stage{flex:1;position:relative;display:grid;place-items:center;overflow:hidden}
+.stage .bgimg{z-index:0;filter:blur(2px)}
+#cv,.stage canvas{position:relative;z-index:1;border-radius:10px;box-shadow:0 0 0 1px var(--line),0 0 40px rgba(220,123,96,.18);touch-action:none}
+.log{font:13px/1.45 "JetBrains Mono",monospace;padding:8px max(2vw,10px);border-top:1px solid var(--line);background:#07031c;min-height:72px;position:relative;z-index:2}
+.hstats{display:contents}.ctrl{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:6px 8px max(8px,env(safe-area-inset-bottom));background:#07031c;position:relative;z-index:2}.ctrl:empty{display:none}.ctrl button{min-width:52px;min-height:48px;border-radius:12px;border:1px solid var(--line);background:rgba(220,123,96,.15);color:var(--peach);font-size:17px;padding:0 12px}.ctrl button.on{background:var(--terra);color:#1b0f22}
+.log .os{color:var(--peach)}.log .os em{color:var(--green);font-style:normal}
+.rn{}@media(max-width:600px){.rn{display:none}.stat small{font-size:11px}.hud{padding:6px 10px}.iconbtn{min-height:38px;min-width:38px}}
+.log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ok{color:var(--green)}.warn{color:var(--terra)}.info{color:var(--gold)}
+.pad{display:none;justify-content:center;padding:6px 0 max(10px,env(safe-area-inset-bottom));background:#07031c;position:relative;z-index:2}
+.pad .g{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,50px);gap:6px}
+.pad button{border-radius:12px;border:1px solid var(--line);background:rgba(220,123,96,.15);color:var(--peach);font-size:20px}
+@media (pointer:coarse){.pad{display:flex}}
+/* OVERLAYS */
+.ov{position:fixed;inset:0;z-index:10;display:none;place-items:center;background:rgba(7,3,28,.82);backdrop-filter:blur(3px);padding:16px;overflow-y:auto}
+.ov.on{display:grid}
+.panel{width:min(640px,100%);background:linear-gradient(180deg,#1a1142,#0e0830);border:1px solid var(--line);border-radius:18px;padding:clamp(18px,4vw,32px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.panel.wide{width:min(900px,100%)}
+.panel h2{font-size:clamp(26px,4vw,38px);color:var(--peach)}
+.panel .kick{color:var(--gold);font-size:14px;margin-bottom:6px}
+.panel p{color:#e9d8cc}
+.panel ul{padding-left:20px;margin:10px 0}.panel li{margin:4px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;margin-top:14px}
+.up{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:rgba(11,6,40,.6);display:flex;flex-direction:column;gap:6px}
+.up h4{margin:0;font-size:17px;color:var(--peach)}
+.up p{margin:0;font-size:14px;color:var(--mute)}
+.pips{display:flex;gap:4px}.pips i{width:22px;height:6px;border-radius:4px;background:rgba(255,255,255,.12)}.pips i.f{background:var(--green)}
+.up .buy{display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:8px}
+.up .buy b{color:var(--gold);white-space:nowrap}
+.up .btn{min-height:40px;padding:6px 14px}
+.cashline{font-size:18px;margin-top:6px}.cashline b{color:var(--gold)}
+.result img{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:14px 0 4px}
+.levels div{font-size:12px;text-align:center;padding:8px 2px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--mute)}
+.levels div.on{background:var(--terra);color:#1b0f22;font-weight:800}
+.real{display:grid;gap:10px;margin-top:14px}
+.real div{border-left:3px solid var(--green);padding:4px 0 4px 12px;font-size:15px}
+.real b{color:var(--peach)}
+.cta{margin-top:18px;padding:16px;border-radius:14px;background:rgba(220,123,96,.14);border:1px solid var(--terra)}
+.cta a{color:var(--peach);font-weight:800}
+.small{font-size:13px;color:var(--mute)}
+@media(max-width:600px){.hud{gap:6px 12px}.hud .title{font-size:15px}.bar{width:80px}.stat b{font-size:16px}.log{min-height:60px;font-size:12px}}
+@media (prefers-reduced-motion:reduce){#snow{display:none}}
+</style>
+</head>
+<body>
+
+<div id="boot" role="dialog" aria-label="Käynnistys"><pre id="bootTxt"></pre></div>
+<canvas id="snow"></canvas>
+
+<section id="hub" class="screen on">
+  <div class="bgimg" style="background-image:url(assets/town.webp)"></div>
+  <div class="hubwrap">
+    <header class="brand">
+      <h1>ROIVO</h1>
+      <h2>BUSINESS SURVIVAL</h2>
+      <p id="tagline"></p>
+    </header>
+    <section class="about">
+      <p id="aboutTxt"></p>
+      <ul id="svcList"></ul>
+      <button class="chip" id="aboutBtn"></button>
+    </section>
+    <div class="diff" role="group" aria-label="Vaikeustaso">
+      <button class="chip" data-d="harj">Harjoittelija</button>
+      <button class="chip" data-d="it">IT-johtaja</button>
+      <button class="chip" data-d="legend">CIO Legend</button>
+    </div>
+    <div class="diffnote" id="diffnote"></div>
+    <div class="worlds" id="worlds"></div>
+    <div class="foot">
+      <span>Yhteinen kassa <b id="hubcash">0 €</b></span>
+      <span>Edistyminen tallentuu tähän selaimeen</span>
+      <button class="chip" id="reset">Aloita alusta</button>
+    </div>
+  </div>
+</section>
+
+<section id="play" class="screen">
+  <div class="hud">
+    <span class="title">ROIVO · SURVIVE</span>
+    <span class="round" id="hRound">Kierros 1/5</span>
+    <div class="stat"><small id="hGoalL">Kasvu</small><b id="hGoal">0/8</b><div class="bar"><i id="hGoalBar" style="width:0"></i></div></div>
+    <div class="stat"><small>Kassa</small><b id="hCash">0 €</b></div>
+    <div class="stat"><small>Toimintakyky</small><b id="hHp">100 %</b><div class="bar"><i id="hHpBar" style="width:100%"></i></div></div>
+    <div class="stat"><small>Suojat</small><b id="hShield">0</b></div>
+    <div class="buffs" id="hBuffs"></div>
+    <span class="sp"></span>
+    <button class="iconbtn" id="mute" aria-label="Äänet">♪</button>
+    <button class="iconbtn" id="pauseBtn" aria-label="Tauko">❚❚</button>
+  </div>
+  <div class="stage" id="stage">
+    <div class="bgimg" style="background-image:url(assets/survive.webp)"></div>
+    <canvas id="cv" aria-label="Pelikenttä"></canvas>
+  </div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="pad">
+    <div class="g">
+      <span></span><button data-k="U" aria-label="Ylös">▲</button><span></span>
+      <button data-k="L" aria-label="Vasen">◀</button><button data-k="D" aria-label="Alas">▼</button><button data-k="R" aria-label="Oikea">▶</button>
+    </div>
+  </div>
+</section>
+
+<div class="ov" id="ov"><div class="panel" id="panel"></div></div>
+
+<script src="content.js"></script>
+<script>
+{
+// ---------- asetukset ----------
+const C=window.RBS_CONTENT;
+const PIKATESTI_URL=C.links.pikatesti; // muokkaa content.js-tiedostossa
+// Kävijäseuranta: kirjoita tähän pelin oma osoite (esim. 'peli.roivo.fi') ja lisää sama sivusto Plausibleen.
+// Seuranta käynnistyy vain siinä osoitteessa, ei esikatselussa.
+const PLAUSIBLE_DOMAIN='';
+if(PLAUSIBLE_DOMAIN&&location.hostname===PLAUSIBLE_DOMAIN){window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)};const sc=document.createElement('script');sc.defer=true;sc.dataset.domain=PLAUSIBLE_DOMAIN;sc.src='https://plausible.io/js/script.js';document.head.appendChild(sc)}
+const KEY='roivo-bs-v1';
+const DIFF={
+  harj:{label:'Harjoittelija',note:'Hitaammat uhat, enemmän resursseja ja vähemmän vahinkoa.',speed:.82,dmg:.65,cash:1.25},
+  it:{label:'IT-johtaja',note:'Normaali pelimuoto. Tasapainoinen mutta haastava.',speed:1,dmg:1,cash:1},
+  legend:{label:'CIO Legend',note:'Vähemmän rahaa, nopeammat uhat ja kovemmat seuraukset.',speed:1.2,dmg:1.35,cash:.8}
+};
+const ROUNDS=[
+  {name:'Yrityksen perustaminen',goal:8,tick:165,walls:2,virus:0,price:false,debt:0,contract:false,outage:false,
+   news:['Kerää kolikoita. Jokainen kolikko kasvattaa liiketoimintaa ja ketjua.','Kasvu tuo mukanaan uusia järjestelmiä. Ne ilmestyvät kentälle esteinä.','Suojakilpi torjuu yhden osuman.','Vältä seiniä ja omaa ketjuasi.']},
+  {name:'Kasvava yritys',goal:10,tick:150,walls:3,virus:0,price:true,debt:14,contract:true,outage:false,
+   news:['Hintojen nousu liikkuu kentällä. Osuma vie kassasta rahaa.','Tekninen velka jättää kentälle pysyviä esteitä.','Sopimuskortti: kerää ennen kuin aika loppuu, muuten sopimus uusiutuu automaattisesti.']},
+  {name:'Monimutkaistuva IT',goal:12,tick:138,walls:4,virus:2,price:true,debt:12,contract:true,outage:true,
+   news:['Kyberuhat liikkuvat ja hakeutuvat ketjun luo.','Järjestelmäkatko sulkee alueen hetkeksi. Varoitus vilkkuu ennen katkoa.']},
+  {name:'Hallitsematon kasvu',goal:13,tick:124,walls:6,virus:3,price:true,debt:9,contract:true,outage:true,
+   news:['Vapaata tilaa on vähemmän ja uhat liikkuvat nopeammin.','Varmuuskopiot ja osaaminen ratkaisevat, kuinka kauan kestät.']},
+  {name:'Kriisitilanne',goal:15,tick:112,walls:7,virus:4,price:true,debt:7,contract:true,outage:true,
+   news:['Useita samanaikaisia uhkia.','Aiemmat suojaukset ratkaisevat selviytymisen.']}
+];
+const UPG=[
+  {id:'sec',name:'Tietoturva',max:3,price:[300,550,850],desc:l=>`Aloitat kierroksen ${l+1} suojakilvellä.`},
+  {id:'bak',name:'Varmuuskopiointi',max:3,price:[250,450,700],desc:l=>`Toimintakyky palautuu ${(l+1)*2} % viiden sekunnin välein.`},
+  {id:'edu',name:'Henkilöstön osaaminen',max:3,price:[250,450,700],desc:l=>`Osumat heikentävät toimintakykyä ${(l+1)*15} % vähemmän.`},
+  {id:'auto',name:'Automaatio',max:3,price:[300,500,800],desc:l=>`Kolikot tuottavat ${(l+1)*20} % enemmän.`},
+  {id:'view',name:'Tilannekuva',max:1,price:[450],desc:()=>'Uudet uhat näkyvät aiemmin ja sopimuskortit pysyvät kentällä pidempään.'}
+];
+const HUMOR=C.humor;
+const TIPS=['Kun IT:stä päätetään vasta jonkin hajottua, kehittäminen jää aina korjaamisen jalkoihin. IT-johtaminen kääntää järjestyksen: ensin suunta, sitten hankinnat.','IT-sopimukset uusiutuvat yleensä hiljaa. Kun sopimukset, vastuut ja uusimispäivät ovat yhdessä paikassa, irtisanomisen ehtii tehdä ajoissa.','Kasvu tuo uusia järjestelmiä nopeammin kuin kukaan ehtii omistaa niitä. Jokaisella järjestelmällä pitää olla nimetty omistaja.','Varmuuskopio, jonka palautusta ei ole testattu, on vasta oletus. Varautuminen tehdään ennen häiriötä.','Kriisissä ratkaisee se, mitä on tehty ennen kriisiä. Roivon IT360-kartoitus näyttää, missä yrityksen IT on haavoittuvin.'];
+const LEVELS=['Reaktiivinen','Rakenteilla','Hallittu','Johdettu','Strateginen'];
+
+// ---------- tallennus ----------
+const wfresh=(best=0)=>({round:0,done:false,up:{},score:0,best,stats:null});
+const fresh=()=>({diff:'it',cash:0,w1:wfresh(),w2:wfresh(),w3:wfresh(),w4:wfresh()});
+let SAVE;
+try{SAVE=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){SAVE=fresh()}
+for(const k of ['w2','w3','w4'])SAVE[k]=SAVE[k]||wfresh();
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(SAVE))}catch(e){}};
+const $=s=>document.querySelector(s);
+const eur=n=>Math.round(n).toLocaleString('fi-FI').replace(/ /g,' ')+' €';
+
+// ---------- äänet ----------
+let AC=null,muted=false;
+function beep(f,d=.08,type='square',v=.05,slide=0){if(muted)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;if(slide)o.frequency.linearRampToValueAtTime(f+slide,AC.currentTime+d);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const SFX={coin:()=>beep(880,.07,'square',.04,300),shield:()=>beep(520,.15,'triangle',.06,400),hit:()=>beep(140,.25,'sawtooth',.07,-80),buy:()=>beep(660,.12,'triangle',.05,200),warn:()=>beep(300,.12,'square',.03),win:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.16,'triangle',.06),i*110))}};
+
+// ---------- HUB ----------
+// Julkaisupäivät: null = auki heti. Esim. '2026-12-02' avaa maailman sinä päivänä. #esikatselu avaa kaikki.
+const RELEASE={w1:null,w2:null,w3:null,w4:null};
+const WORLDS=[
+  {k:'w1',n:'01',name:'Survive',sub:'Selviydy IT-uhista',img:'survive',min:'12 min',rounds:5,unit:'Kierros'},
+  {k:'w2',n:'02',name:'Connect',sub:'Laita tieto liikkumaan',img:'connect',min:'13 min',rounds:5,unit:'Prosessi'},
+  {k:'w3',n:'03',name:'Optimize',sub:'Hallitse IT-kustannuksia',img:'optimize',min:'15 min',rounds:5,unit:'Kierros'},
+  {k:'w4',n:'04',name:'Defend & Grow',sub:'Rakenna kestävä yritys',img:'town',min:'20 min',rounds:8,unit:'Aalto'}
+];
+const isOpen=k=>location.hash==='#esikatselu'||!RELEASE[k]||new Date()>=new Date(RELEASE[k]+'T00:00:00');
+function renderHub(){
+  document.querySelectorAll('.diff .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===SAVE.diff));
+  $('#diffnote').textContent=C.hub.diffHint+' '+DIFF[SAVE.diff].note;
+  $('#hubcash').textContent=eur(SAVE.cash);
+  $('#worlds').innerHTML=WORLDS.map((x,i)=>{
+    const w=SAVE[x.k],open=isOpen(x.k);let act='';
+    if(open){act=w.done?`<span class="meta">Läpäisty · ${(w.best||0).toLocaleString('fi-FI')} pistettä</span><button class="btn" data-play="replay" data-w="${x.k}">Pelaa uudelleen</button>`
+      :w.round>0?`<button class="btn" data-play="cont" data-w="${x.k}">Jatka: ${x.unit.toLowerCase()} ${w.round+1}/${x.rounds}</button>`:`<button class="btn" data-play="new" data-w="${x.k}">Pelaa</button>`}
+    else act=`<span class="meta">Avautuu ${new Date(RELEASE[x.k]).toLocaleDateString('fi-FI')}. Kassa siirtyy tähän maailmaan.</span>`;
+    return `<article class="card${open?'':' locked'}"><div class="thumb" style="background-image:url(assets/${x.img}.webp)"></div>${open?'':`<span class="lockbadge">Avautuu viikolla ${i+1}</span>`}<div class="body"><span class="meta">${x.n} · ${x.min}</span><h3>${x.name}</h3><span>${x.sub}</span><div class="act">${act}</div></div></article>`}).join('');
+}
+$('.diff').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;SAVE.diff=b.dataset.d;persist();renderHub()});
+function playWorld(k,mode){
+  if(mode!=='cont'){SAVE[k]=wfresh(SAVE[k].best||0);if(k==='w1')SAVE.cash=0;persist()}
+  track(mode==='cont'?'continue':(mode==='again'?'replay':'start'),{world:+k[1]});hidePanel();
+  if(k==='w1')startWorld();else{const m=window.RBS.worlds[k];if(m)m.start()}
+}
+$('#worlds').addEventListener('click',e=>{const b=e.target.closest('[data-play]');if(!b)return;playWorld(b.dataset.w,b.dataset.play)});
+$('#reset').addEventListener('click',()=>{showPanel(`<div class="kick">Tallennus</div><h2>Aloitetaanko alusta</h2><p>Kassa, ostetut parannukset ja edistyminen nollataan tästä selaimesta.</p><div class="row"><button class="btn" id="rsY">Nollaa</button><button class="btn ghost" id="rsN">Peruuta</button></div>`);
+  $('#rsY').onclick=()=>{const f=fresh();for(const k in SAVE)delete SAVE[k];Object.assign(SAVE,f);persist();hidePanel();renderHub()};$('#rsN').onclick=hidePanel});
+
+// ---------- lumisade hubiin ----------
+{const c=$('#snow'),x=c.getContext('2d');let f=[];const rs=()=>{c.width=innerWidth;c.height=innerHeight;f=Array.from({length:Math.min(120,innerWidth/10)},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*2+.6,s:Math.random()*.6+.25,d:Math.random()*6}))};rs();addEventListener('resize',rs);
+ const loop=()=>{if($('#hub').classList.contains('on')){x.clearRect(0,0,c.width,c.height);x.fillStyle='rgba(255,236,220,.75)';for(const p of f){p.y+=p.s;p.d+=.01;p.x+=Math.sin(p.d)*.3;if(p.y>c.height){p.y=-4;p.x=Math.random()*c.width}x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()}}else x.clearRect(0,0,c.width,c.height);requestAnimationFrame(loop)};loop()}
+
+// ---------- overlay ----------
+function showPanel(html,wide){const p=$('#panel');p.className='panel'+(wide?' wide':'');p.innerHTML=html;$('#ov').classList.add('on');const b=p.querySelector('.btn');b&&b.focus()}
+function hidePanel(){$('#ov').classList.remove('on')}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
+
+// ---------- peli ----------
+const cv=$('#cv'),g=cv.getContext('2d');
+let COLS,ROWS,CELL,DPR;
+let G=null,raf=0,last=0,running=false;
+const DIRS={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
+const key=(x,y)=>x+','+y;
+const lvl=id=>SAVE.w1.up[id]||0;
+
+function layout(){
+  const st=$('#stage'),W=st.clientWidth-16,H=st.clientHeight-16;
+  const land=W>=H*.95;
+  COLS=land?26:15;ROWS=land?16:22;
+  CELL=Math.max(12,Math.floor(Math.min(W/COLS,H/ROWS)));
+  DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=COLS*CELL*DPR;cv.height=ROWS*CELL*DPR;cv.style.width=COLS*CELL+'px';cv.style.height=ROWS*CELL+'px';
+  g.setTransform(DPR,0,0,DPR,0,0);
+}
+
+function startWorld(){show('play');requestAnimationFrame(()=>{layout();roundIntro()})}
+
+function roundIntro(){
+  const r=SAVE.w1.round,R=ROUNDS[r];
+  showPanel(`<div class="kick">SURVIVE · Kierros ${r+1}/5</div><h2>${R.name}</h2><ul>${R.news.map(n=>`<li>${n}</li>`).join('')}</ul><div class="tip"><b>Roivon havainto</b>${TIPS[r]}</div><p class="small">Tavoite: kerää ${R.goal} kolikkoa. Ohjaus nuolinäppäimillä, WASD-näppäimillä tai pyyhkäisemällä.</p><div class="row"><button class="btn" id="go">Aloita kierros</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  $('#go').onclick=()=>{hidePanel();newRound()};$('#toHub').onclick=toHub;
+}
+function toHub(){running=false;if(window.RBS)for(const k in RBS.worlds)RBS.worlds[k].stop&&RBS.worlds[k].stop();cancelAnimationFrame(raf);hidePanel();show('hub');renderHub()}
+
+function newRound(){
+  layout();
+  const r=SAVE.w1.round,R=ROUNDS[r],D=DIFF[SAVE.diff];
+  const sy=Math.floor(ROWS/2),sx=3;
+  G={r,R,D,t:0,acc:0,tick:R.tick/D.speed,dir:'R',q:[],
+    snake:[[sx+2,sy],[sx+1,sy],[sx,sy]],prev:null,grow:0,
+    walls:new Set(),items:[],movers:[],outages:[],
+    hp:Math.max(50,SAVE.w1.hpCarry??100),shield:lvl('sec'),coins:0,cash0:SAVE.cash,
+    invul:0,stun:0,shake:0,parts:[],floats:[],buffs:{bolt:0,skill:0},
+    nextDebt:R.debt||1e9,nextShield:9,nextPerk:14,nextContract:7,nextOutage:16,nextHumor:20,nextRegen:5,nextVirus:3,
+    stats:SAVE.w1.stats||{hits:0,blocks:0,cOk:0,cMiss:0,hpEnd:[],earned:0},
+    logs:[],ticks:0,rh:0};
+  G.prev=G.snake.map(s=>[...s]);
+  genWalls(R.walls);
+  if(R.price)for(let i=0;i<1+Math.floor(r/2);i++)spawnMover('price');
+  spawnItem('coin');
+  log('info','SURVIVE.EXE käynnistetty. Yrityksen järjestelmät käynnissä.');
+  if(G.shield)log('ok',`Tietoturva aktiivinen: ${G.shield} suojakilpi valmiina.`);
+  running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);hud();
+}
+
+function inStart(x,y){return y>=Math.floor(ROWS/2)-2&&y<=Math.floor(ROWS/2)+2&&x<=10}
+function genWalls(n){
+  let tries=0;
+  while(n>0&&tries++<400){
+    const len=3+Math.floor(Math.random()*3),hor=Math.random()<.5,x=2+Math.floor(Math.random()*(COLS-4)),y=2+Math.floor(Math.random()*(ROWS-4));
+    const cells=[];for(let i=0;i<len;i++){const cx=hor?x+i:x,cy=hor?y:y+i;cells.push([cx,cy])}
+    if(Math.random()<.45){const [lx,ly]=cells[cells.length-1];cells.push(hor?[lx,ly+1]:[lx+1,ly])}
+    if(cells.some(([a,b])=>a<1||b<1||a>COLS-2||b>ROWS-2||inStart(a,b)))continue;
+    // jätä tilaa: ei kiinni muihin seiniin
+    if(cells.some(([a,b])=>{for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++)if(G.walls.has(key(a+i,b+j)))return true;return false}))continue;
+    cells.forEach(([a,b])=>G.walls.add(key(a,b)));n--;
+  }
+}
+function occupied(x,y,margin){
+  if(G.walls.has(key(x,y)))return true;
+  if(G.snake.some(s=>s[0]===x&&s[1]===y))return true;
+  if(G.items.some(i=>i.x===x&&i.y===y))return true;
+  if(G.movers.some(m=>m.x===x&&m.y===y))return true;
+  if(G.outages.some(o=>x>=o.x&&x<o.x+o.w&&y>=o.y&&y<o.y+o.h))return true;
+  if(margin){const [hx,hy]=G.snake[0];if(Math.abs(hx-x)+Math.abs(hy-y)<margin)return true}
+  return false;
+}
+function freeCell(margin=4){for(let i=0;i<300;i++){const x=Math.floor(Math.random()*COLS),y=Math.floor(Math.random()*ROWS);if(!occupied(x,y,margin))return[x,y]}return null}
+const viewBonus=()=>lvl('view')?1.6:1;
+function spawnItem(type){
+  const c=freeCell(type==='debt'?5:3);if(!c)return;
+  const ttl={coin:1e9,shield:12,bolt:10,backup:12,skill:11,contract:9*viewBonus(),debt:1e9}[type];
+  const warn=type==='debt'?1.5*viewBonus():0;
+  G.items.push({type,x:c[0],y:c[1],born:G.t,ttl,warn});
+  if(type==='contract'){log('info',`Sopimuskortti: ${['Lisenssisopimus','Ylläpitosopimus','Pilvipalvelu','Tulostinleasing','Tukisopimus'][Math.floor(Math.random()*5)]} erääntyy. Irtisano ajoissa.`)}
+  if(type==='debt')log('warn',C.log.techDebt+' Kentälle muodostuu este.');
+}
+function spawnMover(kind){
+  const c=freeCell(7);if(!c)return;
+  const every=kind==='virus'?Math.max(2,4-Math.floor(G.r/2)):5;
+  G.movers.push({kind,x:c[0],y:c[1],px:c[0],py:c[1],every,cd:every,warn:G.t+1.2*viewBonus()});
+  if(kind==='virus')log('warn','Kyberuhka havaittu verkossa.');
+}
+
+function log(cls,msg){const tag={ok:'[OK]',warn:'[WARN]',info:'[INFO]'}[cls];G.logs.unshift({cls,msg:`${tag} ${msg}`});G.logs.length=3;renderLog()}
+function renderLog(){$('#log').innerHTML=`<div class="os">ROIVO SYSTEM LOG <em>● ONLINE</em></div>`+G.logs.map(l=>`<div class="${l.cls}"></div>`).join('');
+  [...$('#log').querySelectorAll('div:not(.os)')].forEach((d,i)=>d.textContent=G.logs[i].msg)}
+
+function hud(){
+  $('#hRound').innerHTML=`Kierros ${G.r+1}/5<span class="rn"> · ${G.R.name}</span>`;
+  $('#hGoal').textContent=`${G.coins}/${G.R.goal}`;$('#hGoalBar').style.width=Math.min(100,G.coins/G.R.goal*100)+'%';
+  $('#hCash').textContent=eur(SAVE.cash);
+  $('#hHp').textContent=Math.round(G.hp)+' %';const hb=$('#hHpBar');hb.style.width=G.hp+'%';hb.style.background=G.hp<35?'var(--terra)':G.hp<65?'var(--gold)':'var(--green)';
+  $('#hShield').textContent=G.shield;
+  $('#hBuffs').innerHTML=(G.buffs.bolt>0?`<span class="buff">Tuottavuus ×2</span>`:'')+(G.buffs.skill>0?`<span class="buff">Osaaminen</span>`:'');
+}
+
+// ---------- ohjaus ----------
+function push(d){if(!G||!running)return;const lastD=G.q.length?G.q[G.q.length-1]:G.dir;const [a,b]=DIRS[d],[c,e]=DIRS[lastD];if(a===-c&&b===-e)return;if(d===lastD)return;if(G.q.length<2)G.q.push(d)}
+addEventListener('keydown',e=>{
+  const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R',W:'U',S:'D',A:'L',D:'R'}[e.key];
+  if(m&&$('#play').classList.contains('on')&&!$('#ov').classList.contains('on')){e.preventDefault();push(m)}
+  if((e.key==='p'||e.key==='Escape')&&running)pause();
+  if((e.key===' '||e.key==='Enter')&&$('#ov').classList.contains('on')){const b=$('#panel .btn');if(b&&document.activeElement===document.body){e.preventDefault();b.click()}}
+});
+document.querySelectorAll('.pad button').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();push(b.dataset.k)}));
+let sw=null;
+cv.addEventListener('pointerdown',e=>{sw=[e.clientX,e.clientY]});
+cv.addEventListener('pointermove',e=>{if(!sw)return;const dx=e.clientX-sw[0],dy=e.clientY-sw[1];if(Math.hypot(dx,dy)>24){push(Math.abs(dx)>Math.abs(dy)?(dx>0?'R':'L'):(dy>0?'D':'U'));sw=[e.clientX,e.clientY]}});
+addEventListener('pointerup',()=>sw=null);
+$('#pauseBtn').onclick=()=>running&&pause();
+$('#mute').onclick=()=>{muted=!muted;$('#mute').style.opacity=muted?.4:1};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)pause()});
+addEventListener('resize',()=>{if(running||G){const old=[COLS,ROWS];layout();if(G&&(old[0]!==COLS||old[1]!==ROWS)&&running){/* kentän muoto vaihtui: aloita kierros uudelleen */running=false;SAVE.cash=G.cash0;roundIntro()}else if(G)draw(0)}});
+
+function pause(){running=false;showPanel(`<div class="kick">Tauko</div><h2>Peli pysäytetty</h2><p>Kierros ${G.r+1}/5 · Kassa ${eur(SAVE.cash)} · Toimintakyky ${Math.round(G.hp)} %</p>${note('w1')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rst">Aloita kierros alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
+  $('#res').onclick=()=>{hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};
+  $('#rst').onclick=()=>{SAVE.cash=G.cash0;hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;persist();toHub()}}
+
+// ---------- pelisilmukka ----------
+function loop(now){
+  if(!running)return;
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  update(dt);
+  G.acc+=dt*1000;
+  let n=0;while(G.acc>=G.tick&&n++<3&&running){G.acc-=G.tick;step()}
+  if(running){draw(Math.min(1,G.acc/G.tick));raf=requestAnimationFrame(loop)}
+}
+
+function update(dt){
+  G.t+=dt;G.invul=Math.max(0,G.invul-dt);G.stun=Math.max(0,G.stun-dt);G.shake=Math.max(0,G.shake-dt);
+  for(const b in G.buffs)G.buffs[b]=Math.max(0,G.buffs[b]-dt);
+  const R=G.R;
+  // vanhenevat esineet
+  for(const it of [...G.items]){
+    if(G.t-it.born>it.ttl){G.items.splice(G.items.indexOf(it),1);
+      if(it.type==='contract'){const c=Math.round(250*(1+G.r*.25)/G.D.cash);SAVE.cash=Math.max(0,SAVE.cash-c);G.stats.cMiss++;log('warn',`${C.log.contractRenew} Kassa −${eur(c)}.`);float(it.x,it.y,'−'+eur(c),'#DC7B60');SFX.warn()}}
+  }
+  for(const it of [...G.items])if(it.type==='block'&&G.t-it.born>it.warn){G.items.splice(G.items.indexOf(it),1);if(!G.snake.some(s=>s[0]===it.x&&s[1]===it.y))G.walls.add(key(it.x,it.y))}
+  if(!G.items.some(i=>i.type==='coin'))spawnItem('coin');
+  if(G.t>G.nextShield){G.nextShield=G.t+14+Math.random()*8;if(!G.items.some(i=>i.type==='shield'))spawnItem('shield')}
+  if(G.t>G.nextPerk){G.nextPerk=G.t+11+Math.random()*7;spawnItem(G.hp<70&&Math.random()<.6?'backup':['bolt','skill','backup'][Math.floor(Math.random()*3)])}
+  if(R.contract&&G.t>G.nextContract){G.nextContract=G.t+15+Math.random()*8;spawnItem('contract')}
+  if(R.debt&&G.t>G.nextDebt){G.nextDebt=G.t+R.debt*(.8+Math.random()*.4);spawnItem('debt')}
+  if(R.virus&&G.t>G.nextVirus&&G.movers.filter(m=>m.kind==='virus').length<R.virus){G.nextVirus=G.t+6;spawnMover('virus')}
+  if(R.outage&&G.t>G.nextOutage){G.nextOutage=G.t+18+Math.random()*8;spawnOutage()}
+  G.outages=G.outages.filter(o=>G.t<o.until);
+  if(G.t>G.nextHumor){G.nextHumor=G.t+22+Math.random()*15;log('info',HUMOR[Math.floor(Math.random()*HUMOR.length)])}
+  if(lvl('bak')&&G.t>G.nextRegen){G.nextRegen=G.t+5;G.hp=Math.min(100,G.hp+lvl('bak')*2)}
+  G.parts=G.parts.filter(p=>(p.l-=dt)>0);G.parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=60*dt});
+  G.floats=G.floats.filter(f=>(f.l-=dt)>0);
+  hud();
+}
+function spawnOutage(){
+  for(let i=0;i<40;i++){const w=3,h=3,x=1+Math.floor(Math.random()*(COLS-w-2)),y=1+Math.floor(Math.random()*(ROWS-h-2));const [hx,hy]=G.snake[0];
+    if(Math.abs(hx-(x+1))+Math.abs(hy-(y+1))<6)continue;
+    let bad=false;for(let a=x;a<x+w;a++)for(let b=y;b<y+h;b++)if(G.walls.has(key(a,b)))bad=true;if(bad)continue;
+    const warn=2.5*viewBonus();G.outages.push({x,y,w,h,start:G.t+warn,until:G.t+warn+8});log('warn','Järjestelmäkatko tulossa. Alue suljetaan hetken päästä.');return}
+}
+function growthBlocks(){
+  // kasvu tuo uusia järjestelmiä: jokainen kolikko lisää esteitä
+  const per=[.6,1,1,1.4,1.7][G.r];let n=Math.floor(per)+(Math.random()<per%1?1:0);
+  const cap=Math.floor(COLS*ROWS*.16);
+  const pending=G.items.filter(i=>i.type==='block').length;
+  if(G.walls.size+pending>=cap)return;
+  for(let k=0;k<n;k++){
+    const c=freeCell(5);if(!c)return;
+    const [hx,hy]=G.snake[0],[dx,dy]=DIRS[G.dir];
+    // ei suoraan ketjun eteen
+    let ahead=false;for(let i=1;i<=4;i++)if(c[0]===hx+dx*i&&c[1]===hy+dy*i)ahead=true;if(ahead)continue;
+    G.items.push({type:'block',x:c[0],y:c[1],born:G.t,ttl:1e9,warn:1.6*viewBonus()});
+  }
+  if(n&&Math.random()<.35)log('warn',['Kasvu toi uuden järjestelmän. Kukaan ei vielä omista sitä.','Uusi sovellus otettu käyttöön ilman IT:n tietoa.','Kenttä monimutkaistuu. Järjestelmiä on enemmän kuin ennen.'][Math.floor(Math.random()*3)]);
+}
+const outageAt=(x,y)=>G.outages.some(o=>G.t>=o.start&&x>=o.x&&x<o.x+o.w&&y>=o.y&&y<o.y+o.h);
+const debtAt=(x,y)=>G.items.some(i=>i.type==='debt'&&i.x===x&&i.y===y&&G.t-i.born>i.warn);
+
+function blocked(x,y){
+  if(x<0||y<0||x>=COLS||y>=ROWS)return'wall';
+  if(G.walls.has(key(x,y)))return'wall';
+  if(debtAt(x,y))return'debt';
+  if(outageAt(x,y))return'outage';
+  const body=G.grow>0?G.snake:G.snake.slice(0,-1);
+  if(body.some(s=>s[0]===x&&s[1]===y))return'self';
+  return null;
+}
+
+function step(){
+  G.ticks++;
+  moveMovers();
+  if(G.stun>0){G.prev=G.snake.map(s=>[...s]);return}
+  if(G.q.length)G.dir=G.q.shift();
+  const [hx,hy]=G.snake[0],[dx,dy]=DIRS[G.dir],nx=hx+dx,ny=hy+dy;
+  const b=blocked(nx,ny);
+  if(b){
+    const names={wall:'Törmäys rakenteeseen',debt:'Tekninen velka pysäytti kasvun',outage:'Järjestelmäkatko pysäytti toiminnan',self:'Yritys kompastui omiin prosesseihinsa'};
+    hit(18,names[b]);
+    // käänny vapaaseen suuntaan
+    const opts=Object.keys(DIRS).filter(k=>{const [a,c]=DIRS[k];return !(a===-dx&&c===-dy)&&!blocked(hx+a,hy+c)});
+    if(opts.length)G.dir=opts[Math.floor(Math.random()*opts.length)];
+    G.q=[];G.stun=.35;G.prev=G.snake.map(s=>[...s]);return;
+  }
+  G.prev=G.snake.map(s=>[...s]);
+  G.snake.unshift([nx,ny]);G.prev.unshift([hx,hy]);
+  if(G.grow>0)G.grow--;else{G.snake.pop();G.prev.pop()}
+  // esineet
+  const it=G.items.find(i=>i.x===nx&&i.y===ny&&i.type!=='debt'&&i.type!=='block');
+  if(it)pick(it);
+  collideMovers();
+  if(G.coins>=G.R.goal)roundDone();
+}
+
+function pick(it){
+  G.items.splice(G.items.indexOf(it),1);
+  const D=G.D;
+  switch(it.type){
+    case'coin':{const v=Math.round(100*D.cash*(1+lvl('auto')*.2)*(G.buffs.bolt>0?2:1)*(1+G.r*.15));SAVE.cash+=v;G.stats.earned+=v;G.coins++;G.grow+=1;growthBlocks();float(it.x,it.y,'+'+eur(v),'#E5B65D');burst(it.x,it.y,'#E5B65D');SFX.coin();break}
+    case'shield':G.shield++;log('ok','Suojakilpi kerätty. Seuraava osuma torjutaan.');burst(it.x,it.y,'#8FC9AE');SFX.shield();break;
+    case'bolt':G.buffs.bolt=10;log('ok','Tuottavuus kasvoi. Kolikot tuottavat tuplasti 10 sekunnin ajan.');burst(it.x,it.y,'#FFC99C');SFX.shield();break;
+    case'backup':G.hp=Math.min(100,G.hp+20);log('ok',C.log.backupOk+' Toimintakyky +20 %.');burst(it.x,it.y,'#8FC9AE');SFX.shield();break;
+    case'skill':G.buffs.skill=12;log('ok','Osaaminen vahvistui. Virheiden vaikutus puolittuu hetkeksi.');burst(it.x,it.y,'#8FC9AE');SFX.shield();break;
+    case'contract':{const v=Math.round(160*(1+G.r*.2)*D.cash);SAVE.cash+=v;G.stats.cOk++;log('ok',`Sopimus irtisanottu ajoissa. Säästö ${eur(v)}.`);float(it.x,it.y,'+'+eur(v),'#8FC9AE');burst(it.x,it.y,'#FFC99C');SFX.coin();break}
+  }
+}
+
+function moveMovers(){
+  const [hx,hy]=G.snake[0];
+  for(const m of G.movers){
+    m.px=m.x;m.py=m.y;
+    if(G.t<m.warn)continue;
+    if(--m.cd>0)continue;m.cd=m.every;
+    let opts=Object.values(DIRS).map(([a,b])=>[m.x+a,m.y+b]).filter(([x,y])=>x>=0&&y>=0&&x<COLS&&y<ROWS&&!G.walls.has(key(x,y))&&!debtAt(x,y)&&!G.movers.some(o=>o!==m&&o.x===x&&o.y===y));
+    if(!opts.length)continue;
+    if(m.kind==='virus'&&Math.random()<.55)opts.sort((p,q)=>(Math.abs(p[0]-hx)+Math.abs(p[1]-hy))-(Math.abs(q[0]-hx)+Math.abs(q[1]-hy)));
+    else opts.sort(()=>Math.random()-.5);
+    [m.x,m.y]=opts[0];
+  }
+}
+function collideMovers(){
+  for(const m of [...G.movers]){
+    if(G.t<m.warn)continue;
+    const idx=G.snake.findIndex(s=>s[0]===m.x&&s[1]===m.y);
+    if(idx<0)continue;
+    if(m.kind==='price'){
+      if(idx!==0)continue;
+      const c=Math.round(180*(1+G.r*.2)/G.D.cash);SAVE.cash=Math.max(0,SAVE.cash-c);
+      log('warn',`${C.log.priceHike} Kassa −${eur(c)}.`);float(m.x,m.y,'−'+eur(c),'#DC7B60');SFX.warn();
+      G.movers.splice(G.movers.indexOf(m),1);setTimeout(()=>G&&running&&spawnMover('price'),4000);
+    }else{
+      G.movers.splice(G.movers.indexOf(m),1);G.nextVirus=G.t+4;
+      if(G.shield>0||G.invul>0){if(G.invul<=0){G.shield--;G.stats.blocks++;const v=Math.round(60*G.D.cash);SAVE.cash+=v;log('ok',`Suojakilpi torjui kyberhyökkäyksen. Torjuntabonus ${eur(v)}.`);SFX.shield()}burst(m.x,m.y,'#8FC9AE')}
+      else hit(25,'Kyberhyökkäys osui',true);
+    }
+  }
+}
+
+function hit(dmg,why,isVirus){
+  if(G.invul>0)return;
+  if(G.shield>0&&!isVirus){G.shield--;G.stats.blocks++;G.invul=1;log('ok',`Suojakilpi torjui: ${why.toLowerCase()}.`);SFX.shield();return}
+  const red=(1-lvl('edu')*.15)*(G.buffs.skill>0?.5:1);
+  const d=dmg*G.D.dmg*red;G.hp=Math.max(0,G.hp-d);G.stats.hits++;G.rh++;
+  G.invul=1.3;G.shake=.3;SFX.hit();
+  const cut=Math.min(2,G.snake.length-3);for(let i=0;i<cut;i++){G.snake.pop();G.prev.pop()}
+  const [hx,hy]=G.snake[0];burst(hx,hy,'#DC7B60');float(hx,hy,`−${Math.round(d)} %`,'#DC7B60');
+  log('warn',`${why}. Toimintakyky −${Math.round(d)} %.`);
+  if(G.hp<=0)roundFail();
+}
+
+function roundFail(){
+  running=false;track('round_fail',{round:G.r+1});SAVE.cash=G.cash0;persist();
+  showPanel(`<div class="kick">SURVIVE · Kierros ${G.r+1}/5</div><h2>Toimintakyky loppui</h2><p>Yritys ei kestänyt kierroksen uhkia. Kassa palautuu kierroksen alun tilanteeseen ja ostetut parannukset säilyvät.</p><p class="small">Vinkki: suojakilvet ja varmuuskopiot kannattaa kerätä ennen kuin niitä tarvitsee.</p><div class="row"><button class="btn" id="again">Yritä uudelleen</button><button class="btn ghost" id="hb2">Päävalikkoon</button></div>`);
+  $('#again').onclick=()=>{hidePanel();newRound()};$('#hb2').onclick=toHub;
+}
+
+function roundDone(){
+  running=false;SFX.win();
+  const hpB=Math.round(G.hp*4*G.D.cash);SAVE.cash+=hpB;
+  G.stats.hpEnd.push(Math.round(G.hp));
+  const pts=Math.round(G.coins*100+G.hp*20+(G.stats.cOk*150)-G.rh*60+Math.max(0,180-G.t)*5);
+  SAVE.w1.score+=Math.max(100,pts);SAVE.w1.stats=G.stats;SAVE.w1.hpCarry=Math.round(G.hp);
+  SAVE.w1.round=G.r+1;SAVE.w1.time=(SAVE.w1.time||0)+G.t;track('round_complete',{round:G.r+1,secs:Math.round(G.t)});
+  if(SAVE.w1.round>=5){finishWorld();return}
+  persist();shop(hpB);
+}
+
+function shop(hpB){
+  const r=SAVE.w1.round,nt=note('w1');
+  const draw=()=>{
+    showPanel(`<div class="kick">Kierros ${r}/5 läpäisty${hpB?` · Toimintakykybonus +${eur(hpB)}`:''}</div><h2>Investoi ennen kierrosta ${r+1}</h2><p>Parannukset ovat pysyviä koko pelimaailman ajan. Säästäminen auttaa nyt, mutta tekemättömät investoinnit näkyvät myöhemmin.</p><div class="cashline">Kassa <b>${eur(SAVE.cash)}</b></div>
+    <div class="shop">${UPG.map(u=>{const l=lvl(u.id),maxed=l>=u.max,p=maxed?0:Math.round(u.price[l]/ (SAVE.diff==='harj'?1.15:SAVE.diff==='legend'?.9:1));
+      return `<div class="up"><h4>${u.name}</h4><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<l?'f':''}"></i>`).join('')}</div><p>${maxed?'Täysi taso.':u.desc(l)}</p>${svcLine('w1',u.id)}<div class="buy"><b>${maxed?'':eur(p)}</b>${maxed?'':`<button class="btn" data-buy="${u.id}" data-p="${p}" ${SAVE.cash<p?'disabled':''}>Osta</button>`}</div></div>`}).join('')}</div>
+    ${nt}
+    <div class="row"><button class="btn" id="next">Kierros ${r+1}: ${ROUNDS[r].name}</button><button class="btn ghost" id="hb3">Tallenna ja poistu</button></div>`,true);
+    $('#panel').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const p=+b.dataset.p;if(SAVE.cash<p)return;SAVE.cash-=p;SAVE.w1.up[b.dataset.buy]=lvl(b.dataset.buy)+1;persist();SFX.buy();draw()});
+    $('#next').onclick=()=>{hidePanel();roundIntro()};$('#hb3').onclick=toHub;
+    $('#next').focus();
+  };
+  draw();
+}
+
+// ---------- maailman loppu ----------
+function maturity(){
+  const s=SAVE.w1.stats||{hits:0,blocks:0,cOk:0,cMiss:0,hpEnd:[]};
+  const hp=s.hpEnd.length?s.hpEnd.reduce((a,b)=>a+b,0)/s.hpEnd.length:50;
+  const cRate=(s.cOk+s.cMiss)?s.cOk/(s.cOk+s.cMiss):.5;
+  const prot=(s.blocks+s.hits)?s.blocks/(s.blocks+s.hits):.5;
+  const upTot=UPG.reduce((a,u)=>a+lvl(u.id)/u.max,0)/UPG.length;
+  const v=hp*.35+cRate*100*.25+prot*100*.2+upTot*100*.2;
+  return{v,idx:v<35?0:v<50?1:v<65?2:v<80?3:4,cRate,prot};
+}
+function profile(){
+  const sec=lvl('sec')+lvl('bak'),eff=lvl('auto')+lvl('edu'),s=SAVE.w1.stats;
+  if(s&&s.cOk>=6&&s.cOk>s.cMiss*2)return['Säästäjä','Pidit sopimukset ja kustannukset hallinnassa.'];
+  if(sec>eff+1)return['Riskienhallitsija','Rakensit suojaukset ennen kuin niitä tarvittiin.'];
+  if(eff>sec+1)return['Tehostaja','Panostit tuottavuuteen ja osaamiseen.'];
+  return['Tasapainoinen IT-johtaja','Jaoit panokset riskien, tuottavuuden ja kustannusten kesken.'];
+}
+function finishWorld(){
+  const w=SAVE.w1;w.done=true;track('world_complete',{world:1,score:w.score,mins:Math.round((w.time||0)/60)});w.best=Math.max(w.best||0,w.score);persist();
+  const m=maturity(),[pName,pText]=profile();
+  const s1=w.stats||{hpEnd:[],earned:0},hpA=s1.hpEnd.length?s1.hpEnd.reduce((a,b)=>a+b,0)/s1.hpEnd.length:50;
+  worldEnd({key:'w1',num:'01',world:'Survive',title:'IT Survivor',img:'survive',score:w.score,idx:m.idx,pName,pText,next:'Connect',hp:hpA,
+    dims:{cost:30+m.cRate*70,sec:m.prot*60+hpA*.4,prod:20+(s1.earned||0)/110},
+    line:'Selvisin kyberuhista, kustannusten noususta ja teknisestä velasta.',
+    levelNote:'Taso lasketaan toimintakyvystä, sopimusten hoitamisesta, suojausten osuvuudesta ja investoinneista.',
+    real:[`<b>Sopimuskortit.</b> Hoidit ajoissa ${Math.round(m.cRate*100)} % sopimuksista. Oikeassa yrityksessä uusiutuvat sopimukset jäävät usein huomaamatta, koska kukaan ei näe uusimispäiviä. Roivo tekee IT-sopimukset, vastuut ja uusimispäivät näkyviksi.`,
+      `<b>Tilannekuva.</b> ${lvl('view')?'Hankit tilannekuvan, joten uhat näkyivät ennen kuin ne osuivat.':'Jätit tilannekuvan hankkimatta, joten uhat tulivat yllätyksenä.'} Roivon IT360-kartoitus tekee saman yrityksen IT-kokonaisuudelle: mitä on, kuka omistaa ja missä riskit ovat.`,
+      `<b>Suojaukset.</b> Torjuit ${Math.round(m.prot*100)} % osumista. Varautuminen toimii vain, jos se on tehty ennen häiriötä.`]});
+}
+// yhteinen maailman loppuruutu: o = {key,num,world,title,img,score,idx,pName,pText,line,levelNote,real[],next,dims{cost,sec,prod},hp}
+function insight(d){
+  const T=C.result,k=Object.keys(d).sort((a,b)=>d[a]-d[b]),lo=k[0],hi=k[2];
+  if(d[lo]>=75)return T.allGood;
+  if(d[hi]<55)return[`Jokaiseen osa-alueeseen jäi pelissä kehitettävää. Eniten huomiota vaatii se, että ${T.weak[lo][0]}.`,T.weak[lo][1]];
+  return[`Hallitsit pelissä ${T.strong[hi]} hyvin, mutta ${T.weak[lo][0]}.`,T.weak[lo][1]];
+}
+function worldEnd(o){
+  const T=C.result,cl=v=>Math.round(Math.max(10,Math.min(100,v)));
+  const d=o.dims?{cost:cl(o.dims.cost),sec:cl(o.dims.sec),prod:cl(o.dims.prod)}:{cost:50,sec:50,prod:50};
+  const [ins,q]=insight(d);
+  makeCard(o).then(url=>{
+    showPanel(`<div class="kick">${T.kick}</div><h2>${o.title}</h2>
+    <p>Pelimaailma ${+o.num} suoritettu · ${DIFF[SAVE.diff].label} · <b>${o.score.toLocaleString('fi-FI')} pistettä</b>${o.hp!=null?` · Toimintakyky ${Math.round(o.hp)} %`:''} · Kassa ${eur(SAVE.cash)}${o.next?`, siirtyy ${o.next}-maailmaan`:''}.</p>
+    <div class="result"><img alt="Jaettava tuloskortti" src="${url}"></div>
+    <h3 style="font-size:20px;color:var(--peach);margin-top:18px">Havainnot pelisuorituksestasi</h3>
+    <div class="dims">${Object.keys(d).map(k=>`<div><span>${T.dims[k]}</span><span class="tr"><i style="width:${d[k]}%;background:${d[k]<50?'var(--terra)':d[k]<75?'var(--gold)':'var(--green)'}"></i></span><b>${d[k]}/100</b></div>`).join('')}</div>
+    <div class="note"><span class="nh">ROIVON HUOMIO</span><p>${ins}</p><p style="margin-top:6px;color:var(--peach)">${q}</p></div>
+    <p style="margin-bottom:0"><b>Pelaajaprofiili: ${o.pName}.</b> ${o.pText}</p>
+    <div class="levels">${LEVELS.map((l,i)=>`<div class="${i===o.idx?'on':''}">${l}</div>`).join('')}</div>
+    <p class="small">Pelissä toimit tasolla ${LEVELS[o.idx]}. ${o.levelNote}</p>
+    <div class="cta"><b>${T.ctaTitle}</b><br>${T.ctaText}<br><a href="${PIKATESTI_URL}" target="_blank" rel="noopener" id="ctaEnd">${T.ctaLink} →</a></div>
+    <div class="row"><button class="btn" id="cp">${T.share}</button><button class="btn ghost" id="dl">Lataa tuloskortti</button><button class="btn ghost" id="again">${T.again}</button><a class="btn ghost" href="${C.links.roivo}" target="_blank" rel="noopener" id="svcEnd">${T.services}</a><button class="btn ghost" id="hb4">Päävalikkoon</button></div>
+    <p class="small" id="shareNote"></p>
+    <details class="more"><summary>Mitä tämä tarkoittaa oikeassa organisaatiossa</summary><div class="real">${o.real.map(r=>`<div>${r}</div>`).join('')}</div></details>
+    <p class="small">${T.disclaimer}</p>`,true);
+    const fname='roivo-'+o.title.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.png';
+    $('#dl').onclick=async()=>{const note=t=>$('#shareNote').textContent=t;
+      try{const dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;
+        if(dl){const bin=atob(url.split(',')[1]),arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);await dl.save({filename:fname,data:new Blob([arr],{type:'image/png'})});note('Tuloskortti tallennettu.');track('card_download',{world:+o.num});return}}catch(e){}
+      try{const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();track('card_download',{world:+o.num})}catch(e){}
+      note('Jos lataus ei käynnistynyt, tallenna kuva painamalla sitä pitkään tai hiiren oikealla.')};
+    $('#cp').onclick=async()=>{const t=`${o.line} ROIVO Business Survival, ${o.world}: ${o.score.toLocaleString('fi-FI')} pistettä, IT-kypsyys ${LEVELS[o.idx]}. Pystytkö parempaan? ${location.href.split('#')[0]}`;
+      track('share_copy',{world:+o.num});try{await navigator.clipboard.writeText(t);$('#shareNote').textContent='Jakoteksti kopioitu. Liitä se LinkedIn-julkaisuun ja lisää tuloskortti kuvaksi.'}catch(e){$('#shareNote').textContent=t}};
+    $('#hb4').onclick=toHub;$('#ctaEnd').onclick=()=>track('cta_pikatesti',{from:'result',world:+o.num});$('#svcEnd').onclick=()=>track('cta_roivo',{from:'result',world:+o.num});
+    $('#again').onclick=()=>{toHub();playWorld(o.key,'again')};
+  });
+}
+function makeCard(o){
+  return new Promise(res=>{
+    const c=document.createElement('canvas');c.width=1200;c.height=630;const x=c.getContext('2d');
+    const img=new Image();img.onload=go;img.onerror=go;img.src=`assets/${o.img}.webp`;
+    function go(){
+      x.fillStyle='#0B0628';x.fillRect(0,0,1200,630);
+      if(img.naturalWidth){x.globalAlpha=.45;x.drawImage(img,0,0,1200,675);x.globalAlpha=1}
+      const gr=x.createLinearGradient(0,0,1200,0);gr.addColorStop(0,'rgba(11,6,40,.95)');gr.addColorStop(.65,'rgba(11,6,40,.75)');gr.addColorStop(1,'rgba(11,6,40,.35)');x.fillStyle=gr;x.fillRect(0,0,1200,630);
+      x.strokeStyle='rgba(255,201,156,.55)';x.lineWidth=2;x.strokeRect(24,24,1152,582);
+      x.fillStyle='#FFC99C';x.font='800 30px Cinzel, serif';x.fillText('ROIVO BUSINESS SURVIVAL',70,95);
+      x.fillStyle='#E5B65D';x.font='600 22px Figtree, sans-serif';x.fillText(`PELIMAAILMA ${+o.num} LÄPÄISTY · `+DIFF[SAVE.diff].label.toUpperCase(),70,135);
+      const big=o.title.toUpperCase();x.fillStyle='#FFC99C';x.font=`800 ${big.length>12?72:92}px Cinzel, serif`;x.shadowColor='rgba(220,123,96,.6)';x.shadowBlur=30;x.fillText(big,66,260);x.shadowBlur=0;
+      x.fillStyle='#f6e7da';x.font='800 64px Figtree, sans-serif';x.fillText(o.score.toLocaleString('fi-FI').replace(/ /g,' ')+' pistettä',70,345);
+      x.font='600 28px Figtree, sans-serif';x.fillStyle='#8FC9AE';x.fillText('IT-kypsyys: '+LEVELS[o.idx]+' · '+o.pName,70,400);
+      x.fillStyle='#e9d8cc';x.font='400 26px Figtree, sans-serif';x.fillText(o.line,70,465);
+      x.fillText(o.extra||'Pystytkö parempaan?',70,503);
+      x.fillStyle='#DC7B60';x.font='800 28px Figtree, sans-serif';x.fillText('roivo.fi',70,570);x.fillStyle='#b9a3a0';x.font='400 22px Figtree, sans-serif';x.fillText(C.cardTagline,200,570);
+      x.save();x.translate(1010,300);x.scale(3.2,3.2);shieldPath(x,0,0,40);x.fillStyle='rgba(143,201,174,.18)';x.fill();x.lineWidth=1.6;x.strokeStyle='#8FC9AE';x.stroke();x.restore();
+      x.fillStyle='#FFC99C';x.font='800 64px Cinzel, serif';x.textAlign='center';x.fillText(o.num,1010,325);
+      try{res(c.toDataURL('image/png'))}catch(e){res('')}
+    }
+  });
+}
+
+// ---------- yhteinen pelinäkymä muille maailmoille ----------
+function mkScreen(id,title,bg){
+  let el=document.getElementById(id);if(el)return el._api;
+  el=document.createElement('section');el.id=id;el.className='screen';
+  el.innerHTML=`<div class="hud"><span class="title">ROIVO · ${title}</span><span class="round"></span><span class="hstats"></span><span class="sp"></span><button class="iconbtn mu" aria-label="Äänet">♪</button><button class="iconbtn pz" aria-label="Tauko">❚❚</button></div><div class="stage"><div class="bgimg" style="background-image:url(assets/${bg}.webp)"></div><canvas aria-label="Pelikenttä"></canvas></div><div class="log" aria-live="polite"></div><div class="ctrl"></div>`;
+  document.body.insertBefore(el,$('#ov'));
+  const api={el,stage:el.querySelector('.stage'),cv:el.querySelector('canvas'),logs:[],
+    round(t){el.querySelector('.round').innerHTML=t},
+    stats(defs){el.querySelector('.hstats').innerHTML=defs.map(d=>`<div class="stat"><small>${d.label}</small><b data-k="${d.k}"></b>${d.bar?`<div class="bar"><i data-b="${d.k}"></i></div>`:''}</div>`).join('')},
+    set(k,v,pct,col){const b=el.querySelector(`[data-k="${k}"]`);if(b)b.textContent=v;const i=el.querySelector(`[data-b="${k}"]`);if(i&&pct!=null){i.style.width=Math.max(0,Math.min(100,pct))+'%';if(col)i.style.background=col}},
+    log(cls,msg){const tag={ok:'[OK]',warn:'[WARN]',info:'[INFO]'}[cls];api.logs.unshift({cls,msg:`${tag} ${msg}`});api.logs.length=Math.min(api.logs.length,3);
+      const L=el.querySelector('.log');L.innerHTML=`<div class="os">ROIVO SYSTEM LOG <em>● ONLINE</em></div>`+api.logs.map(l=>`<div class="${l.cls}"></div>`).join('');[...L.querySelectorAll('div:not(.os)')].forEach((d,i)=>d.textContent=api.logs[i].msg)},
+    ctrl(html){el.querySelector('.ctrl').innerHTML=html;return el.querySelector('.ctrl')},
+    clearLog(){api.logs=[];api.log('info',title+'.EXE käynnistetty.')}};
+  el.querySelector('.mu').onclick=()=>{muted=!muted;document.querySelectorAll('.mu,#mute').forEach(b=>b.style.opacity=muted?.4:1)};
+  el._api=api;return api;
+}
+function fitCanvas(api,w,h){const st=api.stage,W=st.clientWidth-12,H=st.clientHeight-12,sc=Math.min(W/w,H/h);const dpr=Math.min(2,devicePixelRatio||1);
+  api.cv.width=Math.round(w*sc*dpr);api.cv.height=Math.round(h*sc*dpr);api.cv.style.width=Math.round(w*sc)+'px';api.cv.style.height=Math.round(h*sc)+'px';
+  const x=api.cv.getContext('2d');x.setTransform(sc*dpr,0,0,sc*dpr,0,0);return{x,sc}}
+function shop2(o){ // o:{wk,kick,title,text,upg,lv(id),buy(id,p),next,onNext,onExit}
+  const nt=note(o.wk);
+  const draw=()=>{showPanel(`<div class="kick">${o.kick}</div><h2>${o.title}</h2><p>${o.text}</p><div class="cashline">Kassa <b>${eur(SAVE.cash)}</b></div>
+    <div class="shop">${o.upg.map(u=>{const l=o.lv(u.id),maxed=l>=u.max,pr=maxed?0:Math.round(u.price[l]/(SAVE.diff==='harj'?1.15:SAVE.diff==='legend'?.9:1));
+      return `<div class="up"><h4>${u.name}</h4><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<l?'f':''}"></i>`).join('')}</div><p>${maxed?'Täysi taso.':u.desc(l)}</p>${svcLine(o.wk,u.id)}<div class="buy"><b>${maxed?'':eur(pr)}</b>${maxed?'':`<button class="btn" data-buy="${u.id}" data-p="${pr}" ${SAVE.cash<pr?'disabled':''}>Osta</button>`}</div></div>`}).join('')}</div>
+    ${nt}
+    <div class="row"><button class="btn" id="next">${o.next}</button><button class="btn ghost" id="hb3">Tallenna ja poistu</button></div>`,true);
+    $('#panel').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const pr=+b.dataset.p;if(SAVE.cash<pr)return;SAVE.cash-=pr;o.buy(b.dataset.buy);persist();SFX.buy();track('upgrade',{id:b.dataset.buy});draw()});
+    $('#next').onclick=()=>{hidePanel();o.onNext()};$('#hb3').onclick=o.onExit||toHub;$('#next').focus()};
+  draw();
+}
+
+// ---------- piirto ----------
+function float(cx,cy,t,c){G.floats.push({x:(cx+.5)*CELL,y:cy*CELL,t,c,l:1.1})}
+function burst(cx,cy,c){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;for(let i=0;i<12;i++){const a=Math.random()*6.28,s=40+Math.random()*90;G.parts.push({x:(cx+.5)*CELL,y:(cy+.5)*CELL,vx:Math.cos(a)*s,vy:Math.sin(a)*s-30,c,l:.6})}}
+function shieldPath(x,cx,cy,s){x.beginPath();x.moveTo(cx,cy-s*.5);x.quadraticCurveTo(cx+s*.42,cy-s*.42,cx+s*.4,cy-s*.32);x.quadraticCurveTo(cx+s*.4,cy+s*.2,cx,cy+s*.5);x.quadraticCurveTo(cx-s*.4,cy+s*.2,cx-s*.4,cy-s*.32);x.quadraticCurveTo(cx-s*.42,cy-s*.42,cx,cy-s*.5);x.closePath()}
+function rr(x,a,b,w,h,r){x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h)}
+
+function draw(t){
+  if(!G)return;
+  const W=COLS*CELL,H=ROWS*CELL,c=CELL;
+  g.save();
+  if(G.shake>0){g.translate((Math.random()-.5)*8*G.shake/.3,(Math.random()-.5)*8*G.shake/.3)}
+  g.fillStyle='rgba(11,6,40,.84)';g.fillRect(0,0,W,H);
+  // ruudukko
+  g.strokeStyle='rgba(255,201,156,.06)';g.lineWidth=1;g.beginPath();
+  for(let i=1;i<COLS;i++){g.moveTo(i*c+.5,0);g.lineTo(i*c+.5,H)}for(let j=1;j<ROWS;j++){g.moveTo(0,j*c+.5);g.lineTo(W,j*c+.5)}g.stroke();
+  // katkot
+  for(const o of G.outages){const active=G.t>=o.start;const blink=active?1:(Math.sin(G.t*12)>0?1:.35);
+    g.fillStyle=active?'rgba(220,123,96,.28)':`rgba(220,123,96,${.12*blink})`;g.fillRect(o.x*c,o.y*c,o.w*c,o.h*c);
+    g.strokeStyle=`rgba(220,123,96,${.8*blink})`;g.setLineDash([6,5]);g.lineWidth=2;g.strokeRect(o.x*c+1,o.y*c+1,o.w*c-2,o.h*c-2);g.setLineDash([]);
+    if(active){g.fillStyle='#DC7B60';g.font=`700 ${Math.max(10,c*.42)}px Figtree`;g.textAlign='center';g.fillText('KATKO',(o.x+o.w/2)*c,(o.y+o.h/2)*c+c*.15);g.fillText(Math.ceil(o.until-G.t)+' s',(o.x+o.w/2)*c,(o.y+o.h/2)*c+c*.65)}}
+  // seinät: kupariset etsausputket
+  for(const k of G.walls){const [a,b]=k.split(',').map(Number);drawWall(a,b)}
+  // esineet
+  for(const it of G.items)drawItem(it);
+  // liikkujat
+  for(const m of G.movers){const px=(m.px+(m.x-m.px)*Math.min(1,t*1.5)),py=(m.py+(m.y-m.py)*Math.min(1,t*1.5));
+    const warn=G.t<m.warn;g.globalAlpha=warn?(.3+.3*Math.sin(G.t*14)):1;
+    m.kind==='virus'?drawVirus((px+.5)*c,(py+.5)*c,c*.42):drawPrice((px+.5)*c,(py+.5)*c,c*.42);g.globalAlpha=1}
+  drawSnake(t);
+  // partikkelit ja tekstit
+  for(const p of G.parts){g.globalAlpha=p.l/.6;g.fillStyle=p.c;g.fillRect(p.x-2,p.y-2,4,4)}g.globalAlpha=1;
+  g.textAlign='center';for(const f of G.floats){g.globalAlpha=Math.min(1,f.l*1.5);g.fillStyle=f.c;g.font=`800 ${Math.max(12,c*.5)}px Figtree`;g.fillText(f.t,f.x,f.y-(1.1-f.l)*30)}g.globalAlpha=1;
+  g.restore();
+}
+function drawWall(a,b){const c=CELL,x=a*c,y=b*c;
+  const has=(i,j)=>G.walls.has(key(a+i,b+j));
+  g.fillStyle='#7a3f33';g.strokeStyle='#DC7B60';g.lineWidth=1.5;
+  const p=c*.18;rr(g,x+p,y+p,c-2*p,c-2*p,3);g.fill();g.stroke();
+  g.fillStyle='#7a3f33';
+  if(has(1,0)){g.fillRect(x+c-p-1,y+p+1,2*p+2,c-2*p-2)}if(has(0,1)){g.fillRect(x+p+1,y+c-p-1,c-2*p-2,2*p+2)}
+  g.strokeStyle='rgba(255,201,156,.35)';g.beginPath();g.moveTo(x+p+3,y+p+3);g.lineTo(x+c-p-3,y+p+3);g.stroke();
+}
+function drawItem(it){
+  const c=CELL,cx=(it.x+.5)*c,cy=(it.y+.5)*c,age=G.t-it.born,s=c*.42;
+  const pulse=1+Math.sin(G.t*5+it.x)*.06;
+  const left=it.ttl-age;g.globalAlpha=left<3?(.45+.55*Math.abs(Math.sin(G.t*8))):Math.min(1,age*4);
+  g.save();g.translate(cx,cy);g.scale(pulse,pulse);
+  switch(it.type){
+    case'coin':g.shadowColor='#E5B65D';g.shadowBlur=14;g.fillStyle='#E5B65D';g.beginPath();g.arc(0,0,s*.85,0,7);g.fill();g.shadowBlur=0;g.strokeStyle='#9c6b1e';g.lineWidth=2;g.beginPath();g.arc(0,0,s*.62,0,7);g.stroke();g.fillStyle='#5b3a0e';g.font=`800 ${s}px Figtree`;g.textAlign='center';g.textBaseline='middle';g.fillText('€',0,1);break;
+    case'shield':g.shadowColor='#8FC9AE';g.shadowBlur=16;shieldPath(g,0,0,s*2);g.fillStyle='rgba(143,201,174,.25)';g.fill();g.lineWidth=2;g.strokeStyle='#8FC9AE';g.stroke();g.shadowBlur=0;g.setLineDash([3,4]);g.beginPath();g.arc(0,0,s*1.15,G.t,G.t+6);g.stroke();g.setLineDash([]);break;
+    case'bolt':g.shadowColor='#FFC99C';g.shadowBlur=14;g.fillStyle='#FFC99C';g.beginPath();g.moveTo(s*.2,-s);g.lineTo(-s*.55,s*.12);g.lineTo(-s*.02,s*.12);g.lineTo(-s*.25,s);g.lineTo(s*.6,-s*.18);g.lineTo(s*.05,-s*.18);g.closePath();g.fill();break;
+    case'backup':g.shadowColor='#8FC9AE';g.shadowBlur=12;g.fillStyle='#2f5a4b';g.strokeStyle='#8FC9AE';g.lineWidth=2;rr(g,-s*.8,-s*.8,s*1.6,s*1.6,3);g.fill();g.stroke();g.fillStyle='#8FC9AE';g.fillRect(-s*.45,-s*.8,s*.9,s*.55);g.fillStyle='#0B0628';g.fillRect(s*.12,-s*.72,s*.2,s*.4);g.fillStyle='#cfe9dd';g.fillRect(-s*.5,s*.05,s,s*.6);break;
+    case'skill':g.shadowColor='#8FC9AE';g.shadowBlur=12;g.fillStyle='#cfe9dd';g.beginPath();g.arc(0,-s*.18,s*.55,0,7);g.fill();g.fillStyle='#8FC9AE';g.fillRect(-s*.28,s*.3,s*.56,s*.42);g.fillStyle='#0B0628';g.font=`800 ${s*.7}px Figtree`;g.textAlign='center';g.textBaseline='middle';g.fillText('i',0,-s*.15);break;
+    case'contract':{g.shadowColor='#FFC99C';g.shadowBlur=10;g.fillStyle='#f3dcc4';g.beginPath();g.moveTo(-s*.65,-s*.85);g.lineTo(s*.35,-s*.85);g.lineTo(s*.65,-s*.55);g.lineTo(s*.65,s*.85);g.lineTo(-s*.65,s*.85);g.closePath();g.fill();g.shadowBlur=0;
+      g.strokeStyle='#8a5a48';g.lineWidth=1.4;for(let i=0;i<3;i++){g.beginPath();g.moveTo(-s*.42,-s*.35+i*s*.32);g.lineTo(s*.42,-s*.35+i*s*.32);g.stroke()}
+      g.fillStyle='#DC7B60';g.beginPath();g.arc(s*.3,s*.55,s*.22,0,7);g.fill();
+      const frac=Math.max(0,left/it.ttl);g.strokeStyle=frac<.35?'#DC7B60':'#E5B65D';g.lineWidth=3;g.beginPath();g.arc(0,0,s*1.25,-Math.PI/2,-Math.PI/2+frac*6.283);g.stroke();
+      g.fillStyle=frac<.35?'#DC7B60':'#E5B65D';g.font=`800 ${Math.max(10,s*.62)}px Figtree`;g.textAlign='center';g.fillText(Math.ceil(left)+' s',0,-s*1.45);break}
+    case'block':{const k=Math.min(1,age/it.warn);g.globalAlpha=.25+.45*Math.abs(Math.sin(G.t*9));g.strokeStyle='#DC7B60';g.setLineDash([3,3]);g.lineWidth=1.5;rr(g,-s*.8,-s*.8,s*1.6,s*1.6,3);g.stroke();g.setLineDash([]);g.fillStyle='rgba(220,123,96,.35)';g.fillRect(-s*.8,s*.8-s*1.6*k,s*1.6,s*1.6*k);break}
+    case'debt':{const on=age>it.warn;g.globalAlpha=on?1:(.25+.35*Math.abs(Math.sin(G.t*10)));g.fillStyle=on?'rgba(220,123,96,.2)':'transparent';g.strokeStyle='#DC7B60';g.lineWidth=2;g.beginPath();g.moveTo(0,-s);g.lineTo(s,s*.8);g.lineTo(-s,s*.8);g.closePath();g.fill();g.stroke();g.fillStyle='#DC7B60';g.font=`800 ${s*1.05}px Figtree`;g.textAlign='center';g.textBaseline='middle';g.fillText('!',0,s*.15);break}
+  }
+  g.restore();g.globalAlpha=1;g.shadowBlur=0;
+}
+function drawVirus(x,y,s){g.save();g.translate(x,y);g.rotate(G.t*1.2);g.shadowColor='#DC7B60';g.shadowBlur=14;g.strokeStyle='#e0604a';g.lineWidth=2;
+  for(let i=0;i<8;i++){const a=i/8*6.283;g.beginPath();g.moveTo(Math.cos(a)*s*.6,Math.sin(a)*s*.6);g.lineTo(Math.cos(a)*s*1.05,Math.sin(a)*s*1.05);g.stroke();g.beginPath();g.arc(Math.cos(a)*s*1.08,Math.sin(a)*s*1.08,s*.12,0,7);g.fillStyle='#e0604a';g.fill()}
+  g.fillStyle='#c8473a';g.beginPath();g.arc(0,0,s*.68,0,7);g.fill();g.shadowBlur=0;g.rotate(-G.t*1.2);
+  g.fillStyle='#2a0b14';g.beginPath();g.arc(-s*.24,-s*.08,s*.12,0,7);g.arc(s*.24,-s*.08,s*.12,0,7);g.fill();g.strokeStyle='#2a0b14';g.lineWidth=1.6;g.beginPath();g.moveTo(-s*.42,-s*.32);g.lineTo(-s*.1,-s*.2);g.moveTo(s*.42,-s*.32);g.lineTo(s*.1,-s*.2);g.stroke();g.beginPath();g.arc(0,s*.3,s*.18,3.6,5.8);g.stroke();g.restore()}
+function drawPrice(x,y,s){g.save();g.translate(x,y);g.shadowColor='#E5B65D';g.shadowBlur=10;g.fillStyle='rgba(220,123,96,.25)';g.strokeStyle='#DC7B60';g.lineWidth=2;rr(g,-s*.95,-s*.75,s*1.9,s*1.5,5);g.fill();g.stroke();g.shadowBlur=0;g.fillStyle='#FFC99C';g.font=`800 ${s*.8}px Figtree`;g.textAlign='center';g.textBaseline='middle';g.fillText('€↑',0,1);g.restore()}
+function drawSnake(t){
+  const c=CELL,n=G.snake.length,blink=G.invul>0&&Math.sin(G.t*25)>0;
+  const pts=G.snake.map((s,i)=>{const p=G.prev[i]||s;return G.stun>0?[(s[0]+.5)*c,(s[1]+.5)*c]:[(p[0]+(s[0]-p[0])*t+.5)*c,(p[1]+(s[1]-p[1])*t+.5)*c]});
+  g.globalAlpha=blink?.35:1;g.lineCap='round';g.lineJoin='round';
+  const path=()=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y))};
+  g.shadowColor='#DC7B60';g.shadowBlur=14;g.strokeStyle='#b8573f';g.lineWidth=c*.7;path();g.stroke();g.shadowBlur=0;
+  const gr=g.createLinearGradient(pts[0][0],pts[0][1],pts[n-1][0],pts[n-1][1]);gr.addColorStop(0,'#FFD9B8');gr.addColorStop(1,'#DC7B60');
+  g.strokeStyle=gr;g.lineWidth=c*.5;path();g.stroke();
+  // datapaketit ketjussa
+  g.fillStyle='rgba(11,6,40,.35)';for(let i=2;i<n;i+=2){const [x,y]=pts[i];g.beginPath();g.arc(x,y,c*.09,0,7);g.fill()}
+  const [hx,hy]=pts[0];g.shadowColor='#FFC99C';g.shadowBlur=18;g.fillStyle='#FFEBD8';rr(g,hx-c*.42,hy-c*.42,c*.84,c*.84,c*.24);g.fill();g.shadowBlur=0;
+  g.fillStyle='#0B0628';const [dx,dy]=DIRS[G.dir],ox=dx*c*.12,oy=dy*c*.12,px=-dy*c*.16,py=dx*c*.16;g.beginPath();g.arc(hx+ox+px,hy+oy+py,c*.075,0,7);g.arc(hx+ox-px,hy+oy-py,c*.075,0,7);g.fill();
+  g.globalAlpha=1;
+  if(G.shield>0){g.strokeStyle='rgba(143,201,174,.7)';g.lineWidth=2;g.setLineDash([4,4]);g.beginPath();g.arc(hx,hy,c*.8,G.t*2,G.t*2+6.283);g.stroke();g.setLineDash([])}
+}
+
+function aboutPanel(){track('roivo_info');const A=C.aboutPanel;
+  showPanel(`<div class="kick">Pelin takana</div><h2>${A.title}</h2>${A.intro.map(t=>`<p>${t}</p>`).join('')}
+<div class="real">${A.services.map(([n,d])=>`<div><b>${n}.</b> ${d}</div>`).join('')}</div>
+<div class="row"><a class="btn" href="${PIKATESTI_URL}" target="_blank" rel="noopener" id="abCta">Tee IT-pikatesti</a><a class="btn ghost" href="${C.links.roivo}" target="_blank" rel="noopener" id="abSite">roivo.fi</a><button class="btn ghost" id="abClose">Takaisin peliin</button></div>`,true);
+  $('#abClose').onclick=hidePanel;$('#abCta').onclick=()=>track('cta_pikatesti',{from:'about'});$('#abSite').onclick=()=>track('cta_roivo',{from:'about'})}
+$('#aboutBtn').onclick=aboutPanel;
+$('#tagline').textContent=C.hub.tagline;$('#aboutTxt').textContent=C.hub.about;$('#aboutBtn').textContent=C.hub.more;
+$('#svcList').innerHTML=C.hub.services.map(()=>'<li></li>').join('');[...$('#svcList').children].forEach((li,i)=>li.textContent=C.hub.services[i]);
+
+// ---------- Roivo Notes ----------
+function note(wk){
+  const all=C.notes.map((n,i)=>({...n,i})),pool=all.filter(n=>!wk||n.w.includes(wk));
+  let seen=[];try{seen=JSON.parse(localStorage.getItem(KEY+'-notes')||'[]')}catch(e){}
+  let c=pool.filter(n=>!seen.includes(n.i));if(!c.length){seen=seen.filter(i=>!pool.some(n=>n.i===i));c=pool}
+  const n=c[Math.floor(Math.random()*c.length)];seen.push(n.i);try{localStorage.setItem(KEY+'-notes',JSON.stringify(seen.slice(-14)))}catch(e){}
+  const esc=t=>t.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  return `<div class="note"><span class="nh">ROIVO NOTE / ${String(n.i+1).padStart(3,'0')} · ${esc(n.topic)}</span><p>${esc(n.text)}</p></div>`;
+}
+const svcLine=(wk,id)=>C.svc[wk]&&C.svc[wk][id]?`<span class="svc">Roivo: ${C.svc[wk][id]}</span>`:'';
+
+// ---------- mittaus ----------
+// Tapahtumat menevät dataLayeriin (GTM/GA4) ja Plausibleen, jos ne on lisätty sivulle omassa osoitteessa.
+function track(ev,props={}){
+  props={diff:SAVE.diff,...props};
+  try{(window.dataLayer=window.dataLayer||[]).push({event:'rbs_'+ev,...props})}catch(e){}
+  try{window.plausible&&window.plausible('rbs_'+ev,{props})}catch(e){}
+  try{const m=JSON.parse(localStorage.getItem(KEY+'-m')||'{}');m[ev]=(m[ev]||0)+1;localStorage.setItem(KEY+'-m',JSON.stringify(m))}catch(e){}
+}
+
+// ---------- käynnistysruutu ----------
+{const lines=[['','ROIVO SYSTEM v1.0'],['ok','[OK] Käynnistetään IT-johtaminen'],['lead',C.boot.lead],...C.boot.lines.map(l=>['ok','[OK] '+l]),['','Ladataan BUSINESS SURVIVAL...'],['note',''],['hint','Napauta tai paina mitä tahansa näppäintä']];
+ const box=$('#bootTxt'),boot=$('#boot');let i=0,done=false;
+ const close=()=>{if(done)return;done=true;boot.style.transition='opacity .35s';boot.style.opacity=0;setTimeout(()=>boot.remove(),360);track('open')};
+ const add=()=>{if(done||i>=lines.length)return;const [c,t]=lines[i++];
+   if(c==='note'){const d=document.createElement('span');d.className='bootnote';d.innerHTML=note();box.appendChild(d)}
+   else{const sp=document.createElement('span');sp.className=c;sp.textContent=t+(c==='lead'?'':'\n');box.appendChild(sp)}
+   setTimeout(add,c==='lead'||c==='note'?900:240)};
+ add();boot.addEventListener('click',close);addEventListener('keydown',close,{once:true});setTimeout(close,8000)}
+
+window.RBS={C,note,svcLine,aboutPanel,SAVE,persist,track,showPanel,hidePanel,show,eur,SFX,DIFF,LEVELS,TIPS,PIKATESTI_URL,worldEnd,mkScreen,fitCanvas,shop2,wfresh,shieldPath,rr,$,worlds:{},
+  toHub:()=>{for(const k in window.RBS.worlds)window.RBS.worlds[k].stop&&window.RBS.worlds[k].stop();toHub()},get muted(){return muted}};
+renderHub();
+}
+</script>
+<script src="connect.js"></script>
+<script src="optimize.js"></script>
+<script src="defend.js"></script>
+</body>
+</html>
