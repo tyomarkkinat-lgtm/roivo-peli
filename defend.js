@@ -1,59 +1,60 @@
 // ROIVO Business Survival · 04 DEFEND & GROW (kaistapuolustus, kaikki aiemmat opit yhdessä)
 {
-const R=window.RBS,{SAVE,eur,SFX,DIFF,LEVELS,$}=R;
-const LANES=['Tuotanto','Myynti','Talous','Henkilöstö'];
+const R=window.RBS,{SAVE,eur,SFX,DIFF,LEVELS,$,$t,pc,num}=R;
+const LANES=$t(['Tuotanto','Myynti','Talous','Henkilöstö'],['Production','Sales','Finance','People']);
 const SLOTS=[.07,.19,.31,.43,.55,.67];
 const TW={
-  sec:{name:'Tietoturva',cost:600,hp:70,dps:16,range:.42,col:'#8FC9AE',desc:'Torjuu hyökkäyksiä kaistalla.'},
-  auto:{name:'Automaatio',cost:800,hp:45,income:70,every:6,col:'#E5B65D',desc:'Tuottaa rahaa koko ajan.'},
-  bak:{name:'Varmistus',cost:500,hp:240,regen:5,col:'#5f8fb0',desc:'Kestää iskuja ja palautuu.'},
-  edu:{name:'Koulutus',cost:400,hp:55,slow:.4,range:.36,dps:5,col:'#cfe9dd',desc:'Hidastaa uhkia ja pysäyttää kalastelun.'},
-  lead:{name:'IT-johtaminen',cost:900,hp:70,buff:.3,col:'#FFC99C',desc:'Koko kaistan ratkaisut +30 %.'},
-  comp:{name:'Kilpailutus',cost:450,hp:90,col:'#c9a0dc',desc:'Pysäyttää hinnannousut ja muuttaa ne säästöiksi.'}
+  sec:{name:$t('Tietoturva','Security'),cost:600,hp:70,dps:16,range:.42,col:'#8FC9AE',desc:$t('Torjuu hyökkäyksiä kaistalla.','Stops attacks on its lane.')},
+  auto:{name:$t('Automaatio','Automation'),cost:800,hp:45,income:70,every:6,col:'#E5B65D',desc:$t('Tuottaa rahaa koko ajan.','Earns money during waves.')},
+  bak:{name:$t('Varmistus','Backup'),cost:500,hp:240,regen:5,col:'#5f8fb0',desc:$t('Kestää iskuja ja palautuu.','Takes hits and recovers.')},
+  edu:{name:$t('Koulutus','Training'),cost:400,hp:55,slow:.4,range:.36,dps:5,col:'#cfe9dd',desc:$t('Hidastaa uhkia ja pysäyttää kalastelun.','Slows threats and stops phishing.')},
+  lead:{name:$t('IT-johtaminen','IT leadership'),cost:900,hp:70,buff:.3,col:'#FFC99C',desc:$t('Koko kaistan ratkaisut +30 %.','All solutions on the lane +30%.')},
+  comp:{name:$t('Kilpailutus','Procurement'),cost:450,hp:90,col:'#c9a0dc',desc:$t('Pysäyttää hinnannousut ja muuttaa ne säästöiksi.','Stops price rises and turns them into savings.')}
 };
 const EN={
-  kyber:{name:'Kyberhyökkäys',hp:42,sp:.075,dmg:12,hit:9,rew:40,col:'#e0604a'},
-  vika:{name:'Järjestelmävika',hp:120,sp:.042,dmg:20,hit:13,rew:70,col:'#c98a5a'},
-  phish:{name:'Tietojenkalastelu',hp:24,sp:.115,dmg:7,hit:6,rew:25,col:'#e8a0b0'},
-  price:{name:'Hinnannousu',hp:1,sp:.06,dmg:0,hit:0,rew:0,col:'#DC7B60',cost:260},
-  boss:{name:'Laaja kyberhäiriö',hp:480,sp:.03,dmg:35,hit:25,rew:320,col:'#ff4f3a'}
+  kyber:{name:$t('Kyberhyökkäys','Cyber attack'),hp:42,sp:.075,dmg:12,hit:9,rew:40,col:'#e0604a'},
+  vika:{name:$t('Järjestelmävika','System failure'),hp:120,sp:.042,dmg:20,hit:13,rew:70,col:'#c98a5a'},
+  phish:{name:$t('Tietojenkalastelu','Phishing'),hp:24,sp:.115,dmg:7,hit:6,rew:25,col:'#e8a0b0'},
+  price:{name:$t('Hinnannousu','Price rise'),hp:1,sp:.06,dmg:0,hit:0,rew:0,col:'#DC7B60',cost:260},
+  boss:{name:$t('Laaja kyberhäiriö','Major cyber incident'),hp:480,sp:.03,dmg:35,hit:25,rew:320,col:'#ff4f3a'}
 };
 const WAVES=[
-  {name:'Arki alkaa',mix:{kyber:5},every:2.6},
-  {name:'Kalasteluviestit',mix:{kyber:4,phish:6},every:2},
-  {name:'Kustannuspaine',mix:{kyber:5,price:4,phish:3},every:1.9},
-  {name:'Järjestelmät vanhenevat',mix:{vika:4,kyber:6,phish:4},every:1.7},
-  {name:'Kasvun kipuja',mix:{vika:5,kyber:7,price:5,phish:5},every:1.45},
-  {name:'Kohdistettu hyökkäys',mix:{kyber:12,phish:8,vika:4},every:1.2},
-  {name:'Toimittaja nostaa hintoja',mix:{price:9,vika:6,kyber:8,phish:6},every:1.1},
-  {name:'Kriisi ja kysyntäpiikki',mix:{boss:1,kyber:12,vika:7,price:6,phish:8},every:.9,demand:true}
+  {name:$t('Arki alkaa','Business as usual'),mix:{kyber:5},every:2.6},
+  {name:$t('Kalasteluviestit','Phishing emails'),mix:{kyber:4,phish:6},every:2},
+  {name:$t('Kustannuspaine','Cost pressure'),mix:{kyber:5,price:4,phish:3},every:1.9},
+  {name:$t('Järjestelmät vanhenevat','Ageing systems'),mix:{vika:4,kyber:6,phish:4},every:1.7},
+  {name:$t('Kasvun kipuja','Growing pains'),mix:{vika:5,kyber:7,price:5,phish:5},every:1.45},
+  {name:$t('Kohdistettu hyökkäys','Targeted attack'),mix:{kyber:12,phish:8,vika:4},every:1.2},
+  {name:$t('Toimittaja nostaa hintoja','Vendor raises prices'),mix:{price:9,vika:6,kyber:8,phish:6},every:1.1},
+  {name:$t('Kriisi ja kysyntäpiikki','Crisis and demand spike'),mix:{boss:1,kyber:12,vika:7,price:6,phish:8},every:.9,demand:true}
 ];
-const HUMOR=['Henkilöstö kävi tietoturvakoulutuksen. Klikkausprosentti putosi.',...R.C.humor];
+const HUMOR=[$t('Henkilöstö kävi tietoturvakoulutuksen. Klikkausprosentti putosi.','Staff completed security training. Click rate dropped.'),...R.C.humor];
 let api,G=null,raf=0,last=0,running=false;
 const W4=()=>SAVE.w4;
 
 function start(){
   api=R.mkScreen('w-defend','DEFEND & GROW','town');
-  api.stats([{k:'cash',label:'Kassa'},{k:'hp',label:'Toimintakyky',bar:1},{k:'wave',label:'Aalto'},{k:'value',label:'Yrityksen arvo'}]);
+  api.stats([{k:'cash',label:$t('Kassa','Cash')},{k:'hp',label:$t('Toimintakyky','Capacity'),bar:1},{k:'wave',label:$t('Aalto','Wave')},{k:'value',label:$t('Yrityksen arvo','Company value')}]);
   api.el.querySelector('.pz').onclick=()=>running&&pause();
   R.show('w-defend');requestAnimationFrame(()=>R.rulesFirst('w4',()=>W4().round>0&&W4().snap?resumeWorld():intro()));
 }
 function stop(){running=false;cancelAnimationFrame(raf)}
 function legacy(){ // aiempien maailmojen vaikutus
   const w1=SAVE.w1,b={secMul:1+(w1.up.sec||0)*.1,autoMul:SAVE.w2.done?1.2:1,priceMul:SAVE.w3.done?.9:1,lines:[]};
-  b.lines.push(w1.done?`Survive läpäisty: tietoturvainvestoinnit (${w1.up.sec||0} tasoa) tehostavat Tietoturvaa ${Math.round((b.secMul-1)*100)} %.`:'Survive kesken: ei tietoturvabonusta.');
-  b.lines.push(SAVE.w2.done?'Connect läpäisty: integraatiot nostavat Automaation tuottoa 20 %.':'Connect kesken: ei automaatiobonusta.');
-  b.lines.push(SAVE.w3.done?'Optimize läpäisty: kilpailutetut sopimukset laskevat kaikkia hintoja 10 %.':'Optimize kesken: ei hintaetua.');
+  b.n=(w1.done?1:0)+(SAVE.w2.done?1:0)+(SAVE.w3.done?1:0);
+  b.lines.push(w1.done?$t(`Survive läpäisty: tietoturvainvestoinnit (${w1.up.sec||0} tasoa) tehostavat Tietoturvaa ${Math.round((b.secMul-1)*100)} %.`,`Survive completed: your security upgrades (${w1.up.sec||0} levels) make Security ${Math.round((b.secMul-1)*100)}% stronger.`):$t('Survive kesken: ei tietoturvabonusta.','Survive not completed: no security bonus.'));
+  b.lines.push(SAVE.w2.done?$t('Connect läpäisty: integraatiot nostavat Automaation tuottoa 20 %.','Connect completed: integrations raise Automation income by 20%.'):$t('Connect kesken: ei automaatiobonusta.','Connect not completed: no automation bonus.'));
+  b.lines.push(SAVE.w3.done?$t('Optimize läpäisty: kilpailutetut sopimukset laskevat kaikkia hintoja 10 %.','Optimize completed: tendered contracts lower all prices by 10%.'):$t('Optimize kesken: ei hintaetua.','Optimize not completed: no price discount.'));
   return b;
 }
 function intro(){
   const L=legacy(),D=DIFF[SAVE.diff];const min=Math.round(2600*D.cash);
-  R.showPanel(`<div class="kick">DEFEND & GROW · 8 aaltoa</div><h2>Rakenna kestävä yritys</h2>
-  <ul><li>Yrityksellä on neljä toimintoa. Uhat tulevat kaistoja pitkin kohti yritystä.</li><li>Valitse ratkaisu alapalkista ja napauta paikkaa kaistalla. Kaistalla oleva ratkaisu pysäyttää uhat, kunnes se hajoaa.</li><li>Hinnannousut kulkevat suojausten läpi. Vain kilpailutus pysäyttää ne.</li><li>Säästäminen auttaa alussa, mutta tekemättömät investoinnit näkyvät viimeisissä aalloissa.</li></ul>
-  <div class="tip"><b>Aiempien maailmojen vaikutus</b>${L.lines.join('<br>')}</div>
+  R.showPanel(`<div class="kick">DEFEND & GROW · ${$t('8 aaltoa','8 waves')}</div><h2>${$t('Rakenna kestävä yritys','Build a resilient company')}</h2>
+  <ul>${$t(['Yrityksellä on neljä toimintoa. Uhat tulevat kaistoja pitkin kohti yritystä.','Valitse ratkaisu alapalkista ja napauta paikkaa kaistalla. Kaistalla oleva ratkaisu pysäyttää uhat, kunnes se hajoaa.','Hinnannousut kulkevat suojausten läpi. Vain kilpailutus pysäyttää ne.','Säästäminen auttaa alussa, mutta tekemättömät investoinnit näkyvät viimeisissä aalloissa.'],['The company has four functions. Threats come down the lanes towards it.','Pick a solution from the bar below and tap a slot on a lane. A solution on the lane holds threats back until it breaks.','Price rises pass through defences. Only procurement stops them.','Saving helps early on, but skipped investments show in the final waves.']).map(x=>`<li>${x}</li>`).join('')}</ul>
+  <div class="tip"><b>${$t('Aiempien maailmojen vaikutus','Effect of earlier worlds')}</b>${L.lines.join('<br>')}</div>
   ${R.note('w4')}
-  <p class="small">Aloituskassa vähintään ${eur(min)}, vaikka aiemmat maailmat olisivat kesken.</p>
-  <div class="row"><button class="btn" id="go">Aloita</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  <p class="small">${$t(`Aloituskassa vähintään ${eur(min)}, vaikka aiemmat maailmat olisivat kesken.`,`Starting cash is at least ${eur(min)}, even if earlier worlds are unfinished.`)}</p>
+  <div class="row"><button class="btn" id="go">${$t('Aloita','Start')}</button><button class="btn ghost" id="rl">${$t('Säännöt','Rules')}</button><button class="btn ghost" id="toHub">${$t('Päävalikkoon','Main menu')}</button></div>`);
   $('#rl').onclick=()=>R.rules('w4',intro);
   $('#go').onclick=()=>{R.hidePanel();newGame()};$('#toHub').onclick=R.toHub;
 }
@@ -77,16 +78,16 @@ function resumeWorld(){init();const s=W4().snap;SAVE.cash=s.cash;G.hp=s.hp;G.wav
 function price(k){return Math.round(TW[k].cost*G.B.priceMul)}
 function addTower(k,lane,slot,free){const T=TW[k];G.towers.push({k,lane,slot,p:SLOTS[slot],hp:T.hp,max:T.hp,cd:0,acc:0,flash:0});if(!free){G.stats.built[k]=(G.stats.built[k]||0)+1}}
 function buildPhase(){
-  G.phase='build';api.round(`Aalto ${G.wave+1}/8<span class="rn"> · ${WAVES[G.wave].name}</span>`);
-  api.clearLog();api.log('info',`Rakennusvaihe. Seuraava aalto: ${WAVES[G.wave].name}.`);
-  if(WAVES[G.wave].demand)api.log('warn','Viimeinen aalto: kyberhäiriö, kustannusten nousu ja kysyntäpiikki yhtä aikaa.');
+  G.phase='build';api.round(`${$t('Aalto','Wave')} ${G.wave+1}/8<span class="rn"> · ${WAVES[G.wave].name}</span>`);
+  api.clearLog();api.log('info',$t(`Rakennusvaihe. Seuraava aalto: ${WAVES[G.wave].name}.`,`Build phase. Next wave: ${WAVES[G.wave].name}.`));
+  if(WAVES[G.wave].demand)api.log('warn',$t('Viimeinen aalto: kyberhäiriö, kustannusten nousu ja kysyntäpiikki yhtä aikaa.','Final wave: a cyber incident, rising costs and a demand spike all at once.'));
   ctrls();running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function ctrls(){
   const sel=G.pick!=null?G.towers[G.pick]:null;
-  const c=api.ctrl((sel?`<button id="sell">Myy ${TW[sel.k].name} (+${eur(price(sel.k)*.5)})</button><button id="cx">Peruuta</button>`:
+  const c=api.ctrl((sel?`<button id="sell">${$t('Myy','Sell')} ${TW[sel.k].name} (+${eur(price(sel.k)*.5)})</button><button id="cx">${$t('Peruuta','Cancel')}</button>`:
     Object.keys(TW).map(k=>`<button data-k="${k}" class="${G.sel===k?'on':''}" ${SAVE.cash<price(k)?'style="opacity:.5"':''}>${TW[k].name}<br><small>${eur(price(k))}</small></button>`).join(''))+
-    (G.phase==='build'?`<button id="wv">Aloita aalto ${G.wave+1}</button>`:''));
+    (G.phase==='build'?`<button id="wv">${$t('Aloita aalto','Start wave')} ${G.wave+1}</button>`:''));
   c.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{G.sel=b.dataset.k;api.log('info',`${TW[G.sel].name}: ${TW[G.sel].desc} Roivo: ${R.C.svc.w4[G.sel]}.`);ctrls()});
   const wv=c.querySelector('#wv');if(wv)wv.onclick=startWave;
   const fc=R.fitCanvas(api,G.L.W,G.L.H);G.x=fc.x;G.sc=fc.sc;
@@ -96,7 +97,7 @@ function startWave(){
   if(G.phase!=='build')return;const Wv=WAVES[G.wave],D=G.D;
   G.queue=[];for(const k in Wv.mix){const n=Math.round(Wv.mix[k]*(k==='boss'?1:D.speed));for(let i=0;i<n;i++)G.queue.push(k)}
   G.queue.sort(()=>Math.random()-.5);if(Wv.mix.boss){G.queue=G.queue.filter(k=>k!=='boss');G.queue.splice(Math.floor(G.queue.length*.6),0,'boss')}
-  G.phase='wave';G.spawnT=1;G.waveStart=G.t;G.income=0;api.log('warn',`Aalto ${G.wave+1} alkoi: ${Wv.name}.`);SFX.warn();ctrls();
+  G.phase='wave';G.spawnT=1;G.waveStart=G.t;G.income=0;api.log('warn',$t(`Aalto ${G.wave+1} alkoi: ${Wv.name}.`,`Wave ${G.wave+1} started: ${Wv.name}.`));SFX.warn();ctrls();
 }
 function lead(lane){return G.towers.some(t=>t.k==='lead'&&t.lane===lane)?1+TW.lead.buff:1}
 function loop(now){if(!running)return;const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);if(running){draw();raf=requestAnimationFrame(loop)}}
@@ -118,12 +119,12 @@ function update(dt){
       let slow=1;for(const t of G.towers)if(t.k==='edu'&&t.lane===e.lane&&e.p>t.p&&e.p-t.p<TW.edu.range)slow=1-TW.edu.slow;
       const block=G.towers.filter(t=>t.lane===e.lane&&t.p<e.p&&e.p-t.p<.04&&(e.k!=='price'||t.k==='comp')).sort((a,b)=>b.p-a.p)[0];
       if(block){
-        if(e.k==='price'&&block.k==='comp'){e.hp=0;const v=Math.round(EN.price.cost*.6);SAVE.cash+=v;G.floats.push({x:pos(e.lane,e.p)[0],y:pos(e.lane,e.p)[1]-18,t:'Säästö +'+v+' €',c:'#8FC9AE',l:1.2});api.log('ok','Kilpailutus pysäytti hinnannousun.');continue}
-        block.hp-=E.dmg*dt;block.flash=.15;if(block.hp<=0){const [x,y]=pos(block.lane,block.p);G.floats.push({x,y,t:TW[block.k].name+' hajosi',c:'#DC7B60',l:1.4});G.stats.lost++;G.towers.splice(G.towers.indexOf(block),1);SFX.hit();G.pick=null;ctrls()}
+        if(e.k==='price'&&block.k==='comp'){e.hp=0;const v=Math.round(EN.price.cost*.6);SAVE.cash+=v;G.floats.push({x:pos(e.lane,e.p)[0],y:pos(e.lane,e.p)[1]-18,t:$t('Säästö +','Saved +')+eur(v),c:'#8FC9AE',l:1.2});api.log('ok',$t('Kilpailutus pysäytti hinnannousun.','Procurement stopped a price rise.'));continue}
+        block.hp-=E.dmg*dt;block.flash=.15;if(block.hp<=0){const [x,y]=pos(block.lane,block.p);G.floats.push({x,y,t:TW[block.k].name+$t(' hajosi',' broke'),c:'#DC7B60',l:1.4});G.stats.lost++;G.towers.splice(G.towers.indexOf(block),1);SFX.hit();G.pick=null;ctrls()}
       }else e.p-=E.sp*slow*dt;
       if(e.p<=0){e.hp=0;
-        if(e.k==='price'){SAVE.cash=Math.max(0,SAVE.cash-Math.round(EN.price.cost/G.D.cash));api.log('warn',`${R.C.log.priceHike} Kassa −${eur(EN.price.cost/G.D.cash)}.`);SFX.warn()}
-        else{G.hp-=E.hit*G.D.dmg;G.companyHit=.3;api.log('warn',`${E.name} osui toimintoon ${LANES[e.lane]}.`);SFX.hit()}}
+        if(e.k==='price'){SAVE.cash=Math.max(0,SAVE.cash-Math.round(EN.price.cost/G.D.cash));api.log('warn',`${R.C.log.priceHike} ${$t('Kassa','Cash')} −${eur(EN.price.cost/G.D.cash)}.`);SFX.warn()}
+        else{G.hp-=E.hit*G.D.dmg;G.companyHit=.3;api.log('warn',$t(`${E.name} osui toimintoon ${LANES[e.lane]}.`,`${E.name} hit ${LANES[e.lane]}.`));SFX.hit()}}
     }
     // tornit ampuvat
     for(const t of G.towers){const T=TW[t.k];if(!T.dps)continue;t.cd-=dt;if(t.cd>0)continue;
@@ -141,21 +142,21 @@ function update(dt){
   hud();
 }
 function value(){return Math.round(100000+SAVE.cash*4+G.towers.reduce((a,t)=>a+price(t.k),0)*6+G.hp*400)}
-function hud(){api.set('cash',eur(SAVE.cash));api.set('hp',Math.round(G.hp)+' %',G.hp,G.hp<35?'var(--terra)':G.hp<65?'var(--gold)':'var(--green)');api.set('wave',`${G.wave+1}/8`);api.set('value',eur(value()))}
+function hud(){api.set('cash',eur(SAVE.cash));api.set('hp',pc(G.hp),G.hp,G.hp<35?'var(--terra)':G.hp<65?'var(--gold)':'var(--green)');api.set('wave',`${G.wave+1}/8`);api.set('value',eur(value()))}
 function waveDone(){
   const b=Math.round((200+G.wave*60)*G.D.cash);SAVE.cash+=b;
   G.stats.waves.push(Math.round(G.hp));const w=W4();
   let pts=Math.round(300+G.wave*120+G.hp*15);
-  if(WAVES[G.wave].demand){const dem=G.hp>=60?Math.round(1500*G.D.cash):0;SAVE.cash+=dem;pts+=dem;api.log(dem?'ok':'warn',dem?`Kysyntäpiikki hoidettiin. Lisämyynti ${eur(dem)}.`:'Kysyntäpiikki jäi hyödyntämättä, koska toimintakyky oli alle 60 %.')}
+  if(WAVES[G.wave].demand){const dem=G.hp>=60?Math.round(1500*G.D.cash):0;SAVE.cash+=dem;pts+=dem;api.log(dem?'ok':'warn',dem?$t(`Kysyntäpiikki hoidettiin. Lisämyynti ${eur(dem)}.`,`Demand spike handled. Extra sales ${eur(dem)}.`):$t('Kysyntäpiikki jäi hyödyntämättä, koska toimintakyky oli alle 60 %.','The demand spike was missed because capacity was below 60%.'))}
   w.score+=pts;w.time=(w.time||0)+(G.t-G.waveStart);R.track('round_complete',{world:4,round:G.wave+1,secs:Math.round(G.t-G.waveStart)});
-  SFX.win();api.log('ok',`Aalto ${G.wave+1} torjuttu. Bonus ${eur(b)}.`);
+  SFX.win();api.log('ok',$t(`Aalto ${G.wave+1} torjuttu. Bonus ${eur(b)}.`,`Wave ${G.wave+1} held off. Bonus ${eur(b)}.`));
   G.wave++;G.en=[];
   if(G.wave>=8){running=false;w.snap=null;w.round=8;R.persist();return finish()}
   snapshot();buildPhase();
 }
 function fail(){
   running=false;G.stats.fails++;W4().stats=G.stats;R.track('round_fail',{world:4,round:G.wave+1});SFX.hit();draw();
-  R.showPanel(`<div class="kick">DEFEND & GROW · Aalto ${G.wave+1}/8</div><h2>Toimintakyky loppui</h2><p>Yritys ei kestänyt aallon uhkia. Palataan aallon alkuun: kassa, ratkaisut ja toimintakyky palautuvat.</p><p class="small">Vinkki: rakenna Varmistus kaistan alkuun ja Tietoturva sen taakse. IT-johtaminen vahvistaa koko kaistaa.</p><div class="row"><button class="btn" id="again">Yritä aaltoa uudelleen</button><button class="btn ghost" id="hbx">Päävalikkoon</button></div>`);
+  R.showPanel(`<div class="kick">DEFEND & GROW · ${$t('Aalto','Wave')} ${G.wave+1}/8</div><h2>${$t('Toimintakyky loppui','Out of operational capacity')}</h2><p>${$t('Yritys ei kestänyt aallon uhkia. Palataan aallon alkuun: kassa, ratkaisut ja toimintakyky palautuvat.','The company couldn’t withstand the wave. Back to the start of the wave: cash, solutions and capacity are restored.')}</p><p class="small">${$t('Vinkki: rakenna Varmistus kaistan alkuun ja Tietoturva sen taakse. IT-johtaminen vahvistaa koko kaistaa.','Tip: put Backup at the front of a lane and Security behind it. IT leadership boosts the whole lane.')}</p><div class="row"><button class="btn" id="again">${$t('Yritä aaltoa uudelleen','Retry wave')}</button><button class="btn ghost" id="hbx">${$t('Päävalikkoon','Main menu')}</button></div>`);
   $('#again').onclick=()=>{R.hidePanel();resumeWorld()};$('#hbx').onclick=R.toHub;
 }
 function finish(){
@@ -165,17 +166,19 @@ function finish(){
   const kinds=Object.keys(s.built).length;
   const v=avg*.45+Math.max(0,100-s.fails*12)*.25+Math.min(6,kinds)/6*100*.3,idx=v<35?0:v<50?1:v<65?2:v<80?3:4;
   const sb=s.built,sec=(sb.sec||0)+(sb.bak||0),grow=(sb.auto||0)+(sb.lead||0);
-  const [pName,pText]=kinds>=5&&avg>=70?['Strateginen IT-johtaja','Käytit kaikkia keinoja ja pidit yrityksen toimintakykyisenä.']:sec>grow*2?['Riskienhallitsija','Rakensit vahvat suojaukset ennen kasvua.']:grow>sec?['Kasvattaja','Investoit tuottavuuteen ja johtamiseen.']:['Tasapainoinen IT-johtaja','Jaoit investoinnit suojausten ja kasvun kesken.'];
+  const [pName,pText]=kinds>=5&&avg>=70?$t(['Strateginen IT-johtaja','Käytit kaikkia keinoja ja pidit yrityksen toimintakykyisenä.'],['Strategic IT Leader','You used every lever and kept the company running.']):sec>grow*2?$t(['Riskienhallitsija','Rakensit vahvat suojaukset ennen kasvua.'],['Risk Manager','You built strong protection before growing.']):grow>sec?$t(['Kasvattaja','Investoit tuottavuuteen ja johtamiseen.'],['Grower','You invested in productivity and leadership.']):$t(['Tasapainoinen IT-johtaja','Jaoit investoinnit suojausten ja kasvun kesken.'],['Balanced IT Leader','You split your investments between protection and growth.']);
   const total=['w1','w2','w3','w4'].reduce((a,k)=>a+(SAVE[k].best||0),0),val=value();
   R.worldEnd({key:'w4',num:'04',world:'Defend & Grow',title:all?'CIO Legend':'Business Builder',img:'town',score:w.score,idx,pName,pText,next:null,hp:G.hp,
     dims:{sec:avg,cost:40+(sb.comp||0)*12,prod:30+((sb.auto||0)+(sb.lead||0))*10},
-    line:`Yrityksen arvo kasvoi 100 000 eurosta ${eur(val)}.`,extra:all?`Kaikki neljä maailmaa läpäisty · ${total.toLocaleString('fi-FI').replace(/ /g,' ')} pistettä yhteensä`:'Pystytkö parempaan?',
-    levelNote:'Taso lasketaan toimintakyvystä aaltojen jälkeen, epäonnistumisista ja siitä, kuinka monipuolisesti investoit.',
-    real:[`<b>Investoinnit yhdessä.</b> Rakensit ${Object.values(sb).reduce((a,b)=>a+b,0)} ratkaisua ${kinds} eri tyypistä. Oikeassa yrityksessä tietoturva, varmistukset, automaatio ja osaaminen toimivat vasta yhdessä.`,
+    line:$t(`Yrityksen arvo kasvoi 100 000 eurosta ${eur(val)}.`,`Company value grew from €100,000 to ${eur(val)}.`),extra:all?$t(`Kaikki neljä maailmaa läpäisty · ${num(total)} pistettä yhteensä`,`All four worlds completed · ${num(total)} points in total`):$t('Pystytkö parempaan?','Can you beat it?'),
+    levelNote:$t('Taso lasketaan toimintakyvystä aaltojen jälkeen, epäonnistumisista ja siitä, kuinka monipuolisesti investoit.','The level is based on capacity after each wave, failures and how broadly you invested.'),
+    real:$t([`<b>Investoinnit yhdessä.</b> Rakensit ${Object.values(sb).reduce((a,b)=>a+b,0)} ratkaisua ${kinds} eri tyypistä. Oikeassa yrityksessä tietoturva, varmistukset, automaatio ja osaaminen toimivat vasta yhdessä.`,
       `<b>IT-johtaminen.</b> ${sb.lead?'Johtaminen vahvisti kaistojen kaikkia ratkaisuja.':'Et rakentanut IT-johtamista, joten ratkaisut toimivat erillään.'} Roivon IT-johtaja palveluna tuo saman yritykseen: rahat ja työ kohdistuvat sinne, missä riski tai hyöty on suurin.`,
-      `<b>Aiemmat päätökset.</b> ${G.B.lines.filter(l=>!l.includes('kesken')).length} aiemman maailman investoinnit vaikuttivat tähän maailmaan. IT-päätökset kasautuvat, hyvässä ja huonossa.`]});
+      `<b>Aiemmat päätökset.</b> ${G.B.n} aiemman maailman investoinnit vaikuttivat tähän maailmaan. IT-päätökset kasautuvat, hyvässä ja huonossa.`],[`<b>Investments together.</b> You built ${Object.values(sb).reduce((a,b)=>a+b,0)} solutions of ${kinds} types. In a real company, security, backups, automation and skills only work together.`,
+      `<b>IT leadership.</b> ${sb.lead?'Leadership boosted every solution on its lane.':'You built no IT leadership, so your solutions worked in isolation.'} Roivo’s fractional CIO service does the same for a company: money and effort go where the risk or benefit is greatest.`,
+      `<b>Earlier decisions.</b> Investments from ${G.B.n} earlier world(s) affected this one. IT decisions compound, for better and for worse.`])});
 }
-function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Peli pysäytetty</h2>${R.note('w4')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="hb">Tallenna ja poistu</button></div>`);
+function pause(){running=false;R.showPanel(`<div class="kick">${$t('Tauko','Paused')}</div><h2>${$t('Peli pysäytetty','Game paused')}</h2>${R.note('w4')}<div class="row"><button class="btn" id="res">${$t('Jatka','Resume')}</button><button class="btn ghost" id="rl">${$t('Säännöt','Rules')}</button><button class="btn ghost" id="hb">${$t('Tallenna ja poistu','Save and exit')}</button></div>`);
   $('#rl').onclick=()=>R.rules('w4',pause);$('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#hb').onclick=()=>{if(G.phase==='wave'){const s=W4().snap;if(s)SAVE.cash=s.cash}R.persist();R.toHub()}}
 
 // ---------- syöte ----------
@@ -186,10 +189,10 @@ addEventListener('pointerdown',e=>{if(!G||!running||!api||e.target!==api.cv)retu
   const ex=G.towers.findIndex(t=>t.lane===l&&t.slot===s);
   if(ex>=0){G.pick=ex;ctrls();return}
   G.pick=null;const k=G.sel,pr=price(k);
-  if(k==='lead'&&G.towers.some(t=>t.k==='lead'&&t.lane===l)){api.log('warn','Kaistalla on jo IT-johtaminen.');ctrls();return}
-  if(SAVE.cash<pr){api.log('warn',`Kassa ei riitä: ${TW[k].name} maksaa ${eur(pr)}.`);SFX.warn();return}
-  if(G.en.some(en=>en.lane===l&&Math.abs(en.p-SLOTS[s])<.05)){api.log('warn','Paikka on uhan alla. Valitse toinen.');return}
-  SAVE.cash-=pr;addTower(k,l,s);SFX.buy();if(k==='auto'&&!G.towers.some(t=>t.k==='lead'&&t.lane===l))api.log('warn',R.C.log.aiTool+' Kaistalta puuttuu IT-johtaminen.');if(k==='bak')api.log('ok',R.C.log.backupOk);R.track('build',{k});ctrls();
+  if(k==='lead'&&G.towers.some(t=>t.k==='lead'&&t.lane===l)){api.log('warn',$t('Kaistalla on jo IT-johtaminen.','This lane already has IT leadership.'));ctrls();return}
+  if(SAVE.cash<pr){api.log('warn',$t(`Kassa ei riitä: ${TW[k].name} maksaa ${eur(pr)}.`,`Not enough cash: ${TW[k].name} costs ${eur(pr)}.`));SFX.warn();return}
+  if(G.en.some(en=>en.lane===l&&Math.abs(en.p-SLOTS[s])<.05)){api.log('warn',$t('Paikka on uhan alla. Valitse toinen.','That slot is under attack. Pick another.'));return}
+  SAVE.cash-=pr;addTower(k,l,s);SFX.buy();if(k==='auto'&&!G.towers.some(t=>t.k==='lead'&&t.lane===l))api.log('warn',R.C.log.aiTool+$t(' Kaistalta puuttuu IT-johtaminen.',' The lane has no IT leadership.'));if(k==='bak')api.log('ok',R.C.log.backupOk);R.track('build',{k});ctrls();
 });
 addEventListener('keydown',e=>{if(!api||!api.el.classList.contains('on')||$('#ov').classList.contains('on'))return;
   if((e.key==='p'||e.key==='Escape')&&running)pause();if(e.key===' '&&running&&G.phase==='build'){e.preventDefault();startWave()}
@@ -237,7 +240,7 @@ function draw(){
     if(e.k!=='price'){x.fillStyle='rgba(0,0,0,.5)';x.fillRect(cx-14,cy-26,28,3);x.fillStyle=EN[e.k].col;x.fillRect(cx-14,cy-26,28*e.hp/e.max,3)}}
   for(const s of G.shots){x.strokeStyle=s.c;x.globalAlpha=s.l/.12;x.lineWidth=2;x.beginPath();x.moveTo(...s.a);x.lineTo(...s.b);x.stroke()}x.globalAlpha=1;
   x.textAlign='center';x.font='800 13px Figtree';for(const f of G.floats){x.globalAlpha=Math.min(1,f.l*1.5);x.fillStyle=f.c;x.fillText(f.t,f.x,f.y-(1.2-f.l)*20)}x.globalAlpha=1;
-  if(G.phase==='build'){x.fillStyle='rgba(229,182,93,.95)';x.font='800 15px Figtree';x.fillText(`Rakennusvaihe · valittu: ${TW[G.sel].name} (${eur(price(G.sel))})`,L.land?560:L.W/2,L.land?22:28)}
+  if(G.phase==='build'){x.fillStyle='rgba(229,182,93,.95)';x.font='800 15px Figtree';x.fillText($t(`Rakennusvaihe · valittu: ${TW[G.sel].name} (${eur(price(G.sel))})`,`Build phase · selected: ${TW[G.sel].name} (${eur(price(G.sel))})`),L.land?560:L.W/2,L.land?22:28)}
 }
 function drawBuilding(x,bx,by,l){x.fillStyle='#3a2547';x.strokeStyle='#DC7B60';x.lineWidth=1;const h=[34,26,40,30][l];x.fillRect(bx-14,by-h,28,h);x.strokeRect(bx-14,by-h,28,h);
   x.fillStyle='rgba(229,182,93,.8)';for(let i=0;i<3;i++)for(let j=0;j<Math.floor(h/10);j++)if((i+j+l)%3)x.fillRect(bx-10+i*8,by-h+4+j*10,4,5)}

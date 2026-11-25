@@ -34,3 +34,12 @@ ROIVO Business Survival – julkaisuohje
 4. Muut asetukset index.html-tiedoston alussa
    - RELEASE: maailmojen julkaisupäivät, esim. w2:'2026-12-02'. null = auki heti.
      Osoitteen perään lisätty #esikatselu avaa kaikki maailmat testausta varten.
+
+5. Englanninkielinen versio
+   - Osoite: .../roivo-peli/en/  (oma esikatselukuva og-en.jpg ja englanninkielinen kuvaus LinkedIniä varten)
+   - Englanninkieliset tekstit ovat tiedostossa content.en.js. Pelimaailmojen tekstit ovat koodissa
+     muodossa $t('suomeksi','in English').
+   - en/index.html tehdään automaattisesti: kun index.html muuttuu, aja  python3 build_en.py
+   - Englanninkielisessä versiossa kaikki toimintakehotteet ohjaavat roivo.fi:hin, koska pikatesti on vain suomeksi.
+   - Etusivun alareunassa on kielivalinta (In English / Suomeksi). Avaustapahtuma rbs_open kertoo pelin kielen
+     ja selaimen kielen, ja rbs_lang_switch kertoo kielen vaihdosta.

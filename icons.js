@@ -1,6 +1,6 @@
 // ROIVO Business Survival – sääntöjen kuvakkeet. Piirretään samalla tyylillä kuin pelikenttä.
 {
-const cache={},S=96;
+const cache={},S=96,EN=(window.RBS_LANG||(location.hash==='#en'?'en':'fi'))==='en';
 function rr(x,a,b,w,h,r){x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h)}
 function shield(x,cx,cy,s){x.beginPath();x.moveTo(cx,cy-s*.5);x.quadraticCurveTo(cx+s*.42,cy-s*.42,cx+s*.4,cy-s*.32);x.quadraticCurveTo(cx+s*.4,cy+s*.2,cx,cy+s*.5);x.quadraticCurveTo(cx-s*.4,cy+s*.2,cx-s*.4,cy-s*.32);x.quadraticCurveTo(cx-s*.42,cy-s*.42,cx,cy-s*.5);x.closePath()}
 function virus(x,s,col,spikes=8){x.strokeStyle=col;x.fillStyle=col;x.lineWidth=3;x.shadowColor=col;x.shadowBlur=10;
@@ -22,15 +22,15 @@ const D={
   debt:x=>{const s=S*.32;x.fillStyle='rgba(220,123,96,.2)';x.strokeStyle='#DC7B60';x.lineWidth=3;x.beginPath();x.moveTo(0,-s);x.lineTo(s,s*.8);x.lineTo(-s,s*.8);x.closePath();x.fill();x.stroke();x.fillStyle='#DC7B60';x.font=`800 ${s*1.05}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('!',0,s*.18)},
   price:x=>{const s=S*.3;x.fillStyle='rgba(220,123,96,.25)';x.strokeStyle='#DC7B60';x.lineWidth=3;rr(x,-s*1.1,-s*.8,s*2.2,s*1.6,8);x.fill();x.stroke();x.fillStyle='#FFC99C';x.font=`800 ${s*.9}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('€↑',0,2)},
   virus:x=>virus(x,S*.3,'#e0604a'),
-  outage:x=>{const s=S*.36;x.fillStyle='rgba(220,123,96,.25)';x.fillRect(-s,-s,2*s,2*s);x.strokeStyle='#DC7B60';x.setLineDash([6,5]);x.lineWidth=3;x.strokeRect(-s,-s,2*s,2*s);x.setLineDash([]);x.fillStyle='#DC7B60';x.font=`800 ${S*.17}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('KATKO',0,0)},
+  outage:x=>{const s=S*.36;x.fillStyle='rgba(220,123,96,.25)';x.fillRect(-s,-s,2*s,2*s);x.strokeStyle='#DC7B60';x.setLineDash([6,5]);x.lineWidth=3;x.strokeRect(-s,-s,2*s,2*s);x.setLineDash([]);x.fillStyle='#DC7B60';x.font=`800 ${S*.17}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(EN?'DOWN':'KATKO',0,0)},
   src:x=>{x.fillStyle='rgba(22,15,58,.95)';x.strokeStyle='#8FC9AE';x.lineWidth=3;rr(x,-S*.4,-S*.26,S*.8,S*.52,10);x.fill();x.stroke();x.fillStyle='#8FC9AE';x.fillRect(S*.36,-S*.08,S*.08,S*.16);x.fillStyle='#f6e7da';x.font=`800 ${S*.17}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('CRM',0,1)},
-  tgt:x=>{x.fillStyle='rgba(22,15,58,.95)';x.strokeStyle='#8FC9AE';x.lineWidth=3;rr(x,-S*.4,-S*.26,S*.8,S*.52,10);x.fill();x.stroke();x.fillStyle='#8FC9AE';x.fillRect(-S*.44,-S*.08,S*.08,S*.16);x.fillStyle='#f6e7da';x.font=`800 ${S*.14}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('Laskutus',0,1)},
+  tgt:x=>{x.fillStyle='rgba(22,15,58,.95)';x.strokeStyle='#8FC9AE';x.lineWidth=3;rr(x,-S*.4,-S*.26,S*.8,S*.52,10);x.fill();x.stroke();x.fillStyle='#8FC9AE';x.fillRect(-S*.44,-S*.08,S*.08,S*.16);x.fillStyle='#f6e7da';x.font=`800 ${S*.14}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(EN?'Billing':'Laskutus',0,1)},
   pipeH:x=>pipe(x,[['W','E']]),
   pipeC:x=>pipe(x,[['N','E']]),
   pipeX:x=>pipe(x,[['W','E'],['N','S']]),
   flow:x=>{pipe(x,[['W','E']]);x.strokeStyle='#8FC9AE';x.shadowColor='#8FC9AE';x.shadowBlur=10;x.lineWidth=S*.12;x.lineCap='round';x.beginPath();x.moveTo(-S*.42,0);x.lineTo(S*.05,0);x.stroke()},
   excel:x=>{const s=S*.36;x.fillStyle='rgba(220,123,96,.16)';x.fillRect(-s,-s,2*s,2*s);x.strokeStyle='#DC7B60';x.setLineDash([5,4]);x.lineWidth=2.5;x.strokeRect(-s,-s,2*s,2*s);x.setLineDash([]);x.fillStyle='#DC7B60';x.font=`800 ${S*.17}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('EXCEL',0,0)},
-  legacy:x=>{const s=S*.36;x.fillStyle='rgba(120,100,90,.35)';x.fillRect(-s,-s,2*s,2*s);x.strokeStyle='#8a7a70';x.setLineDash([5,4]);x.lineWidth=2.5;x.strokeRect(-s,-s,2*s,2*s);x.setLineDash([]);x.fillStyle='#b9a3a0';x.font=`800 ${S*.17}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('VANHA',0,0)},
+  legacy:x=>{const s=S*.36;x.fillStyle='rgba(120,100,90,.35)';x.fillRect(-s,-s,2*s,2*s);x.strokeStyle='#8a7a70';x.setLineDash([5,4]);x.lineWidth=2.5;x.strokeRect(-s,-s,2*s,2*s);x.setLineDash([]);x.fillStyle='#b9a3a0';x.font=`800 ${S*.17}px Figtree,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(EN?'LEGACY':'VANHA',0,0)},
   p_dev:x=>block(x,[[0,0],[1,0]],'#8b6fb3'),
   p_lic:x=>block(x,[[0,0],[1,0],[2,0]],'#E5B65D'),
   p_cloud:x=>block(x,[[0,0],[1,0],[0,1]],'#6fa58a'),

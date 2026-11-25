@@ -20,6 +20,7 @@ window.RBS_CONTENT={
 
   // ---------- Tutustu Roivoon -ikkuna ----------
   aboutPanel:{
+    kick:'Pelin takana',
     title:'Tutustu Roivoon',
     intro:['Roivo on IT-johtamisen asiantuntijatalo. Autamme organisaatioita kehittämään IT-toimintojaan, hyödyntämään tekoälyä ja parantamaan työn tuottavuutta.',
       'Emme hoida IT:tä organisaation puolesta. Teemme IT-kokonaisuuden näkyväksi, määritämme vastuut ja muutamme havaitut ongelmat päätöksiksi ja toimenpiteiksi.'],
@@ -31,13 +32,18 @@ window.RBS_CONTENT={
       ['Tekoäly ja tuottavuus','Tekoälyn ja järjestelmien hyödyntäminen niin, että työaika ja laatu oikeasti paranevat.'],
       ['IT-kilpailutukset','Toimittajien kilpailutus ja sopimusten vertailu koko sopimuskauden kustannuksilla.'],
       ['Tietoturva ja varautuminen','Kybervarautuminen, palautumisen testaus ja jatkuvuuden suunnittelu.']
-    ]
+    ],
+    cta:'Tee IT-pikatesti',
+    back:'Takaisin peliin'
   },
 
   // ---------- käynnistysruutu ----------
   boot:{
     lead:'Roivo on IT-johtamisen asiantuntijatalo.',
-    lines:['IT-kokonaisuus näkyväksi','Vastuut määritelty','Ongelmista päätöksiksi']
+    lines:['IT-kokonaisuus näkyväksi','Vastuut määritelty','Ongelmista päätöksiksi'],
+    start:'Käynnistetään IT-johtaminen',
+    loading:'Ladataan BUSINESS SURVIVAL...',
+    hint:'Napauta tai paina mitä tahansa näppäintä'
   },
 
   // ---------- Roivo Notes ----------

@@ -1,47 +1,49 @@
 // ROIVO Business Survival · 02 CONNECT (putkipeli: tieto liikkeelle järjestelmästä toiseen)
 {
-const R=window.RBS,{SAVE,eur,SFX,DIFF,LEVELS,$}=R;
+const R=window.RBS,{SAVE,eur,SFX,DIFF,LEVELS,$,$t,pc}=R;
+const LBL={'Laskutus':'Billing','Verkkokauppa':'Web shop','Tuotanto':'Production','Varasto':'Inventory','Myynti':'Sales','Vanha CRM':'Legacy CRM','Ostettu kirjanpito':'Acquired accounting','Talous':'Finance','Palkat':'Payroll'};
+const lb=x=>R.LANG==='en'?(LBL[x]||x):x;
 const N=1,E=2,S=4,W=8,OPP={1:4,2:8,4:1,8:2},DXY={1:[0,-1],2:[1,0],4:[0,1],8:[-1,0]};
 const PIECES={H:E|W,V:N|S,NE:N|E,NW:N|W,SE:S|E,SW:S|W,X:15};
 const PAIRS=[['CRM','Laskutus'],['Verkkokauppa','ERP'],['Tuotanto','Varasto'],['Myynti','Laskutus'],['Vanha CRM','ERP'],['Ostetun yhtiön kirjanpito','Talous'],['HR','Palkat']];
 const PCOL=['#8FC9AE','#E5B65D','#FFC99C'];
 const ROUNDS=[
-  {name:'Yhdistä myynti ja laskutus',pairs:[[0,'CRM','Laskutus']],blocks:0,t0:28,cell:2.3,
-   news:['Rakenna putkisto lähdejärjestelmästä kohteeseen ennen kuin data lähtee liikkeelle.','Napauta ruutua: seuraava pala asettuu siihen. Valmiin palan voi korvata, mutta se maksaa.','Jos tieto vuotaa putken päästä, se muuttuu käsityöksi ja prosessi epäonnistuu.']},
-  {name:'Poista manuaaliset tiedonsiirrot',pairs:[[1,'Verkkokauppa','ERP']],blocks:4,t0:25,cell:2.1,
-   news:['Kentällä on manuaalisia Excel-siirtoja. Niiden läpi putkea ei voi rakentaa.','Tehokkuus laskee jokaisesta palasta, jonka läpi tieto ei kulje.']},
-  {name:'Yhdistä tuotanto ja varastonhallinta',pairs:[[2,'Tuotanto','Varasto'],[3,'Myynti','Laskutus']],blocks:3,t0:30,cell:2.0,
-   news:['Kaksi tietovirtaa käynnistyy yhtä aikaa. Kumpikin pitää ohjata omaan kohteeseensa.','Risteyspala päästää kaksi virtaa toistensa läpi.']},
-  {name:'Automatisoi useita prosesseja',pairs:[[1,'Verkkokauppa','ERP'],[6,'HR','Palkat']],blocks:5,t0:27,cell:1.75,
-   news:['Virtaus on nopeampi ja esteitä on enemmän.','Väärään järjestelmään päätyvä tieto lasketaan vuodoksi.']},
-  {name:'Yritysoston järjestelmät',pairs:[[4,'Vanha CRM','ERP'],[5,'Ostettu kirjanpito','Talous'],[3,'Myynti','Laskutus']],blocks:5,t0:34,cell:1.6,
-   news:['Yritysoston mukana tuli kolme järjestelmää, jotka pitää liittää omiin.','Vanhat järjestelmät ja Excel-siirrot täyttävät kenttää.']}
+  {name:$t('Yhdistä myynti ja laskutus','Connect sales and billing'),pairs:[[0,'CRM','Laskutus']],blocks:0,t0:28,cell:2.3,
+   news:$t(['Rakenna putkisto lähdejärjestelmästä kohteeseen ennen kuin data lähtee liikkeelle.','Napauta ruutua: seuraava pala asettuu siihen. Valmiin palan voi korvata, mutta se maksaa.','Jos tieto vuotaa putken päästä, se muuttuu käsityöksi ja prosessi epäonnistuu.'],['Build a pipeline from the source system to the target before the data starts moving.','Tap a tile to place the next piece there. You can replace a piece, but it costs money.','If data leaks out of the end of a pipe, it turns into manual work and the process fails.'])},
+  {name:$t('Poista manuaaliset tiedonsiirrot','Remove manual data transfers'),pairs:[[1,'Verkkokauppa','ERP']],blocks:4,t0:25,cell:2.1,
+   news:$t(['Kentällä on manuaalisia Excel-siirtoja. Niiden läpi putkea ei voi rakentaa.','Tehokkuus laskee jokaisesta palasta, jonka läpi tieto ei kulje.'],['The field has manual Excel transfers. You can’t build through them.','Efficiency drops for every piece the data never passes through.'])},
+  {name:$t('Yhdistä tuotanto ja varastonhallinta','Connect production and inventory'),pairs:[[2,'Tuotanto','Varasto'],[3,'Myynti','Laskutus']],blocks:3,t0:30,cell:2.0,
+   news:$t(['Kaksi tietovirtaa käynnistyy yhtä aikaa. Kumpikin pitää ohjata omaan kohteeseensa.','Risteyspala päästää kaksi virtaa toistensa läpi.'],['Two data flows start at once. Each must reach its own target.','A crossing piece lets two flows pass through each other.'])},
+  {name:$t('Automatisoi useita prosesseja','Automate several processes'),pairs:[[1,'Verkkokauppa','ERP'],[6,'HR','Palkat']],blocks:5,t0:27,cell:1.75,
+   news:$t(['Virtaus on nopeampi ja esteitä on enemmän.','Väärään järjestelmään päätyvä tieto lasketaan vuodoksi.'],['Faster flow and more obstacles.','Data that ends up in the wrong system counts as a leak.'])},
+  {name:$t('Yritysoston järjestelmät','Systems from an acquisition'),pairs:[[4,'Vanha CRM','ERP'],[5,'Ostettu kirjanpito','Talous'],[3,'Myynti','Laskutus']],blocks:5,t0:34,cell:1.6,
+   news:$t(['Yritysoston mukana tuli kolme järjestelmää, jotka pitää liittää omiin.','Vanhat järjestelmät ja Excel-siirrot täyttävät kenttää.'],['An acquisition brought three systems that need connecting to yours.','Legacy systems and Excel transfers crowd the field.'])}
 ];
 const UPG=[
-  {id:'auto',name:'Automaatio',max:3,price:[300,500,750],desc:l=>`Virtaus alkaa ${(l+1)*4} sekuntia myöhemmin.`},
-  {id:'map',name:'Prosessikartoitus',max:2,price:[400,700],desc:l=>`Purkaa ${l+1} manuaalista siirtoa ennen prosessin alkua.`},
-  {id:'lib',name:'Integraatiokirjasto',max:3,price:[250,450,650],desc:l=>`Voit ohittaa ${l+1} palaa prosessin aikana.`},
-  {id:'buf',name:'Puskurointi',max:2,price:[350,600],desc:l=>`Tieto liikkuu ${(l+1)*12} % hitaammin.`},
-  {id:'api',name:'Rajapintastandardi',max:1,price:[450],desc:()=>'Risteyspaloja tulee useammin ja palan korvaaminen maksaa puolet vähemmän.'}
+  {id:'auto',name:$t('Automaatio','Automation'),max:3,price:[300,500,750],desc:l=>$t(`Virtaus alkaa ${(l+1)*4} sekuntia myöhemmin.`,`The flow starts ${(l+1)*4} seconds later.`)},
+  {id:'map',name:$t('Prosessikartoitus','Process mapping'),max:2,price:[400,700],desc:l=>$t(`Purkaa ${l+1} manuaalista siirtoa ennen prosessin alkua.`,`Removes ${l+1} manual transfer${l?'s':''} before the process starts.`)},
+  {id:'lib',name:$t('Integraatiokirjasto','Integration library'),max:3,price:[250,450,650],desc:l=>$t(`Voit ohittaa ${l+1} palaa prosessin aikana.`,`You can skip ${l+1} piece${l?'s':''} per process.`)},
+  {id:'buf',name:$t('Puskurointi','Buffering'),max:2,price:[350,600],desc:l=>$t(`Tieto liikkuu ${(l+1)*12} % hitaammin.`,`Data moves ${(l+1)*12}% slower.`)},
+  {id:'api',name:$t('Rajapintastandardi','API standard'),max:1,price:[450],desc:()=>$t('Risteyspaloja tulee useammin ja palan korvaaminen maksaa puolet vähemmän.','Crossing pieces come more often and replacing a piece costs half as much.')}
 ];
-const HUMOR=['Integraatio toimii, kunhan kukaan ei avaa Exceliä.','Tieto kulkee. Kukaan ei tiedä mihin.',...R.C.humor];
+const HUMOR=[...$t(['Integraatio toimii, kunhan kukaan ei avaa Exceliä.','Tieto kulkee. Kukaan ei tiedä mihin.'],['Integration works, as long as nobody opens Excel.','Data is flowing. Nobody knows where.']),...R.C.humor];
 const S_=64; // logiikan ruutukoko
 let api,G=null,raf=0,last=0,running=false;
 const W2=()=>SAVE.w2,lv=id=>W2().up[id]||0;
 
 function start(){
   api=R.mkScreen('w-connect','CONNECT','connect');
-  api.stats([{k:'cash',label:'Kassa'},{k:'cd',label:'Virtaus alkaa'},{k:'eff',label:'Tehokkuus',bar:1},{k:'proc',label:'Käsitellyt'}]);
+  api.stats([{k:'cash',label:$t('Kassa','Cash')},{k:'cd',label:$t('Virtaus alkaa','Flow starts')},{k:'eff',label:$t('Tehokkuus','Efficiency'),bar:1},{k:'proc',label:$t('Käsitellyt','Processed')}]);
   api.el.querySelector('.pz').onclick=()=>running&&pause();
   R.show('w-connect');requestAnimationFrame(()=>R.rulesFirst('w2',intro));
 }
 function stop(){running=false;cancelAnimationFrame(raf)}
 function intro(){
   const r=W2().round,RD=ROUNDS[r];
-  R.showPanel(`<div class="kick">CONNECT · Prosessi ${r+1}/5</div><h2>${RD.name}</h2><ul>${RD.news.map(n=>`<li>${n}</li>`).join('')}</ul>
-  <div class="tip"><b>Roivon havainto</b>${['Kun järjestelmät eivät keskustele keskenään, tieto kulkee ihmisten kautta: kopioimalla, liittämällä ja sähköpostilla.','Jokainen manuaalinen tiedonsiirto on piilokustannus ja virheen paikka. Ne löytyvät, kun prosessi kartoitetaan.','Integraatio ilman omistajaa toimii, kunnes jokin muuttuu. Sen jälkeen kukaan ei tiedä, kenen asia korjaus on.','Automaatio kannattaa rakentaa vasta, kun prosessi on selvä. Muuten automatisoidaan sekava tapa toimia.','Yritysostossa järjestelmien yhteensopivuus selviää usein vasta kaupan jälkeen. Roivon IT360-kartoitus tekee sen näkyväksi etukäteen.'][r]}</div>
-  <p class="small">Napauta tai klikkaa ruutua asettaaksesi seuraavan palan. Kun putki on valmis, käynnistä virtaus itse ja saat bonuksen jäljellä olevasta ajasta.</p>
-  <div class="row"><button class="btn" id="go">Aloita prosessi</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="toHub">Päävalikkoon</button></div>`);
+  R.showPanel(`<div class="kick">CONNECT · ${$t('Prosessi','Process')} ${r+1}/5</div><h2>${RD.name}</h2><ul>${RD.news.map(n=>`<li>${n}</li>`).join('')}</ul>
+  <div class="tip"><b>${$t('Roivon havainto','Roivo’s observation')}</b>${$t(['Kun järjestelmät eivät keskustele keskenään, tieto kulkee ihmisten kautta: kopioimalla, liittämällä ja sähköpostilla.','Jokainen manuaalinen tiedonsiirto on piilokustannus ja virheen paikka. Ne löytyvät, kun prosessi kartoitetaan.','Integraatio ilman omistajaa toimii, kunnes jokin muuttuu. Sen jälkeen kukaan ei tiedä, kenen asia korjaus on.','Automaatio kannattaa rakentaa vasta, kun prosessi on selvä. Muuten automatisoidaan sekava tapa toimia.','Yritysostossa järjestelmien yhteensopivuus selviää usein vasta kaupan jälkeen. Roivon IT360-kartoitus tekee sen näkyväksi etukäteen.'],['When systems don’t talk to each other, data moves through people: copy, paste and email.','Every manual data transfer is a hidden cost and a place for errors. You find them by mapping the process.','An integration without an owner works until something changes. Then nobody knows whose job the fix is.','Build automation only once the process is clear. Otherwise you automate a messy way of working.','In an acquisition, system compatibility often only becomes clear after the deal. Roivo’s IT360 assessment makes it visible beforehand.'])[r]}</div>
+  <p class="small">${$t('Napauta tai klikkaa ruutua asettaaksesi seuraavan palan. Kun putki on valmis, käynnistä virtaus itse ja saat bonuksen jäljellä olevasta ajasta.','Tap or click a tile to place the next piece. When the pipe is ready, start the flow yourself and earn a bonus for the time left.')}</p>
+  <div class="row"><button class="btn" id="go">${$t('Aloita prosessi','Start process')}</button><button class="btn ghost" id="rl">${$t('Säännöt','Rules')}</button><button class="btn ghost" id="toHub">${$t('Päävalikkoon','Main menu')}</button></div>`);
   $('#rl').onclick=()=>R.rules('w2',intro);
   $('#go').onclick=()=>{R.hidePanel();newRound()};$('#toHub').onclick=R.toHub;
 }
@@ -65,7 +67,7 @@ function newRound(){
   let ok=false,tries=0;
   while(!ok&&tries++<60){
     const sr=rows(RD.pairs.length),tr=rows(RD.pairs.length);
-    G.srcs=RD.pairs.map((p,i)=>({x:0,y:sr[i],label:p[1],pair:i}));G.tgts=RD.pairs.map((p,i)=>({x:L.COLS-1,y:tr[i],label:p[2],pair:i}));
+    G.srcs=RD.pairs.map((p,i)=>({x:0,y:sr[i],label:lb(p[1]),pair:i}));G.tgts=RD.pairs.map((p,i)=>({x:L.COLS-1,y:tr[i],label:lb(p[2]),pair:i}));
     for(let y=0;y<L.ROWS;y++)for(let x=0;x<L.COLS;x++)G.grid[y][x]=null;
     let b=RD.blocks;while(b>0){const x=1+rnd(L.COLS-2),y=rnd(L.ROWS);if(!G.grid[y][x]&&!(x===1&&G.srcs.some(s=>s.y===y))&&!(x===L.COLS-2&&G.tgts.some(t=>t.y===y))){G.grid[y][x]={block:true,legacy:r>=4&&Math.random()<.5};b--}}
     ok=G.srcs.every((s,i)=>reach(s.y,G.tgts[i].y));
@@ -74,10 +76,10 @@ function newRound(){
   let m=lv('map');for(let y=0;y<L.ROWS&&m>0;y++)for(let x=0;x<L.COLS&&m>0;x++)if(G.grid[y][x]&&G.grid[y][x].block){G.grid[y][x]=null;m--}
   for(let i=0;i<6;i++)G.queue.push(newPiece());
   api.clearLog();
-  if(lv('map'))api.log('ok',`Prosessikartoitus purki ${Math.min(lv('map'),RD.blocks)} manuaalista siirtoa.`);
+  if(lv('map'))api.log('ok',$t(`Prosessikartoitus purki ${Math.min(lv('map'),RD.blocks)} manuaalista siirtoa.`,`Process mapping removed ${Math.min(lv('map'),RD.blocks)} manual transfer(s).`));
   if(RD.blocks-lv('map')>0)api.log('warn',R.C.log.excel);
-  api.log('info',`Rakenna yhteys: ${RD.pairs.map(p=>p[1]+' → '+p[2]).join(', ')}.`);
-  api.round(`Prosessi ${r+1}/5<span class="rn"> · ${RD.name}</span>`);
+  api.log('info',`${$t('Rakenna yhteys','Build the connection')}: ${RD.pairs.map(p=>lb(p[1])+' → '+lb(p[2])).join(', ')}.`);
+  api.round(`${$t('Prosessi','Process')} ${r+1}/5<span class="rn"> · ${RD.name}</span>`);
   ctrls();running=true;last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
 }
 function reach(sy,ty){ // onko polku olemassa esteiden ohi
@@ -87,17 +89,17 @@ function reach(sy,ty){ // onko polku olemassa esteiden ohi
   return false;
 }
 function ctrls(){
-  const c=api.ctrl(`<button id="cGo">${G.phase==='build'?'Käynnistä virtaus':'Kiihdytä'}</button><button id="cSkip" ${G.skips?'':'disabled'}>Ohita pala (${G.skips})</button>`);
+  const c=api.ctrl(`<button id="cGo">${G.phase==='build'?$t('Käynnistä virtaus','Start flow'):$t('Kiihdytä','Speed up')}</button><button id="cSkip" ${G.skips?'':'disabled'}>${$t('Ohita pala','Skip piece')} (${G.skips})</button>`);
   c.querySelector('#cGo').onclick=()=>{if(G.phase==='build')startFlow(true);else{G.fast=!G.fast;c.querySelector('#cGo').classList.toggle('on',G.fast)}};
   c.querySelector('#cSkip').onclick=skip;
   const fc=R.fitCanvas(api,G.L.W,G.L.H);G.x=fc.x;G.sc=fc.sc;
 }
-function skip(){if(!G||G.skips<=0||!running)return;G.skips--;G.queue.shift();G.queue.push(newPiece());SFX.buy();api.log('info','Integraatiokirjastosta valittiin toinen ratkaisu.');ctrls()}
+function skip(){if(!G||G.skips<=0||!running)return;G.skips--;G.queue.shift();G.queue.push(newPiece());SFX.buy();api.log('info',$t('Integraatiokirjastosta valittiin toinen ratkaisu.','Picked another option from the integration library.'));ctrls()}
 function startFlow(manual){
   if(G.phase!=='build')return;G.phase='flow';
-  if(manual&&G.cd>0){const b=Math.round(G.cd*10*G.D.cash);SAVE.cash+=b;G.stats.cdBonus+=b;api.log('ok',`Virtaus käynnistetty etuajassa. Bonus ${eur(b)}.`)}
+  if(manual&&G.cd>0){const b=Math.round(G.cd*10*G.D.cash);SAVE.cash+=b;G.stats.cdBonus+=b;api.log('ok',$t(`Virtaus käynnistetty etuajassa. Bonus ${eur(b)}.`,`Flow started early. Bonus ${eur(b)}.`))}
   G.cd=0;G.flows=G.srcs.map(s=>({pair:s.pair,x:0,y:s.y,entry:W,exit:E,prog:0,done:false}));
-  api.log('warn','Data liikkuu. Työjono purkautuu putkiston kautta.');SFX.warn();ctrls();
+  api.log('warn',$t('Data liikkuu. Työjono purkautuu putkiston kautta.','Data is moving. The work queue drains through your pipes.'));SFX.warn();ctrls();
 }
 function exitOf(type,entry){if(type==='X')return OPP[entry];const m=PIECES[type]&~entry;return m}
 function loop(now){
@@ -118,15 +120,15 @@ function update(dt){
 function advance(f){
   const L=G.L,[dx,dy]=DXY[f.exit],nx=f.x+dx,ny=f.y+dy,ent=OPP[f.exit];
   const tg=G.tgts.find(t=>t.x===nx&&t.y===ny);
-  if(tg){if(tg.pair===f.pair&&ent===W){f.done=true;f.x=nx;f.y=ny;const b=Math.round(250*(1+G.r*.2)*G.D.cash);SAVE.cash+=b;api.log('ok',`${R.C.log.integrationOk} ${G.RD.pairs[f.pair][1]} → ${G.RD.pairs[f.pair][2]}, bonus ${eur(b)}.`);SFX.win();return}
-    return leak(`Tieto päätyi väärään järjestelmään (${tg.label})`)}
-  if(nx<1||ny<0||ny>=L.ROWS||nx>L.COLS-2)return leak('Putki päättyi kentän reunaan');
+  if(tg){if(tg.pair===f.pair&&ent===W){f.done=true;f.x=nx;f.y=ny;const b=Math.round(250*(1+G.r*.2)*G.D.cash);SAVE.cash+=b;api.log('ok',`${R.C.log.integrationOk} ${lb(G.RD.pairs[f.pair][1])} → ${lb(G.RD.pairs[f.pair][2])}, bonus ${eur(b)}.`);SFX.win();return}
+    return leak($t(`Tieto päätyi väärään järjestelmään (${tg.label})`,`Data ended up in the wrong system (${tg.label})`))}
+  if(nx<1||ny<0||ny>=L.ROWS||nx>L.COLS-2)return leak($t('Putki päättyi kentän reunaan','The pipe ran into the edge of the field'));
   const c=G.grid[ny][nx];
-  if(!c)return leak('Putki päättyi tyhjään');
-  if(c.block)return leak('Tieto törmäsi manuaaliseen Excel-siirtoon');
-  if(!(PIECES[c.type]&ent))return leak('Palat eivät sovi yhteen');
-  if(c.type==='X'){const ax=(ent===E||ent===W)?'h':'v';c.ax=c.ax||{};if(c.ax[ax])return leak('Risteys oli jo käytössä');c.ax[ax]=f.pair+1}
-  else{if(c.fill)return leak('Kaksi virtaa samassa putkessa');}
+  if(!c)return leak($t('Putki päättyi tyhjään','The pipe ended in nothing'));
+  if(c.block)return leak($t('Tieto törmäsi manuaaliseen Excel-siirtoon','Data hit a manual Excel transfer'));
+  if(!(PIECES[c.type]&ent))return leak($t('Palat eivät sovi yhteen','The pieces don’t fit together'));
+  if(c.type==='X'){const ax=(ent===E||ent===W)?'h':'v';c.ax=c.ax||{};if(c.ax[ax])return leak($t('Risteys oli jo käytössä','The crossing was already in use'));c.ax[ax]=f.pair+1}
+  else{if(c.fill)return leak($t('Kaksi virtaa samassa putkessa','Two flows in the same pipe'));}
   if(!c.fill){G.used++}
   c.fill=c.fill||[];c.fill.push({pair:f.pair,entry:ent,exit:exitOf(c.type,ent)});
   f.x=nx;f.y=ny;f.entry=ent;f.exit=exitOf(c.type,ent);
@@ -135,15 +137,15 @@ function advance(f){
 function leak(why){
   running=false;G.stats.fails++;W2().stats=G.stats;SAVE.cash=G.cash0;R.persist();SFX.hit();R.track('round_fail',{world:2,round:G.r+1});
   draw();
-  R.showPanel(`<div class="kick">CONNECT · Prosessi ${G.r+1}/5</div><h2>Tieto vuoti käsityöksi</h2><p>${why}. Joku joutuu nyt siirtämään tiedot käsin. Kassa palautuu prosessin alun tilanteeseen.</p><p class="small">Vinkki: rakenna putki ensin valmiiksi ja käynnistä virtaus vasta sitten. Ohita sopimattomat palat integraatiokirjastolla.</p><div class="row"><button class="btn" id="again">Yritä uudelleen</button><button class="btn ghost" id="hbx">Päävalikkoon</button></div>`);
+  R.showPanel(`<div class="kick">CONNECT · ${$t('Prosessi','Process')} ${G.r+1}/5</div><h2>${$t('Tieto vuoti käsityöksi','Data leaked into manual work')}</h2><p>${why}. ${$t('Joku joutuu nyt siirtämään tiedot käsin. Kassa palautuu prosessin alun tilanteeseen.','Someone now has to move the data by hand. Your cash resets to the start of the process.')}</p><p class="small">${$t('Vinkki: rakenna putki ensin valmiiksi ja käynnistä virtaus vasta sitten. Ohita sopimattomat palat integraatiokirjastolla.','Tip: finish the pipe first and only then start the flow. Skip pieces that don’t fit with the integration library.')}</p><div class="row"><button class="btn" id="again">${$t('Yritä uudelleen','Try again')}</button><button class="btn ghost" id="hbx">${$t('Päävalikkoon','Main menu')}</button></div>`);
   $('#again').onclick=()=>{R.hidePanel();newRound()};$('#hbx').onclick=R.toHub;
 }
 function eff(){return G.placed?Math.round(G.used/G.placed*100):100}
 function hud(){
   api.set('cash',eur(SAVE.cash));
-  api.set('cd',G.phase==='build'?Math.ceil(G.cd)+' s':'Käynnissä');
-  const e=eff();api.set('eff',e+' %',e,e<50?'var(--terra)':e<75?'var(--gold)':'var(--green)');
-  api.set('proc',G.proc+' tilausta');
+  api.set('cd',G.phase==='build'?Math.ceil(G.cd)+' s':$t('Käynnissä','Running'));
+  const e=eff();api.set('eff',pc(e),e,e<50?'var(--terra)':e<75?'var(--gold)':'var(--green)');
+  api.set('proc',G.proc+$t(' tilausta',' orders'));
 }
 function roundDone(){
   running=false;const e=eff();G.stats.eff.push(e);
@@ -151,23 +153,25 @@ function roundDone(){
   const w=W2();w.score+=Math.max(100,Math.round(G.proc*60+e*25+G.stats.cdBonus/4));w.stats=G.stats;w.round=G.r+1;w.time=(w.time||0)+G.t;
   R.track('round_complete',{world:2,round:G.r+1,secs:Math.round(G.t)});R.persist();draw();
   if(w.round>=5)return finish();
-  R.shop2({wk:'w2',kick:`Prosessi ${w.round}/5 valmis · Tehokkuusbonus +${eur(bonus)}`,title:`Investoi ennen prosessia ${w.round+1}`,text:'Parannukset ovat pysyviä koko Connect-maailman ajan.',
-    upg:UPG,lv,buy:id=>{w.up[id]=lv(id)+1},next:`Prosessi ${w.round+1}: ${ROUNDS[w.round].name}`,onNext:intro});
+  R.shop2({wk:'w2',kick:$t(`Prosessi ${w.round}/5 valmis · Tehokkuusbonus +${eur(bonus)}`,`Process ${w.round}/5 complete · Efficiency bonus +${eur(bonus)}`),title:$t(`Investoi ennen prosessia ${w.round+1}`,`Invest before process ${w.round+1}`),text:$t('Parannukset ovat pysyviä koko Connect-maailman ajan.','Upgrades last for the whole Connect world.'),
+    upg:UPG,lv,buy:id=>{w.up[id]=lv(id)+1},next:`${$t('Prosessi','Process')} ${w.round+1}: ${ROUNDS[w.round].name}`,onNext:intro});
 }
 function finish(){
   const w=W2();w.done=true;w.best=Math.max(w.best||0,w.score);R.track('world_complete',{world:2,score:w.score,mins:Math.round((w.time||0)/60)});R.persist();
   const s=w.stats,avgE=s.eff.length?s.eff.reduce((a,b)=>a+b,0)/s.eff.length:60;
   const upTot=UPG.reduce((a,u)=>a+lv(u.id)/u.max,0)/UPG.length;
   const v=avgE*.5+Math.max(0,100-s.fails*15)*.3+upTot*100*.2,idx=v<35?0:v<50?1:v<65?2:v<80?3:4;
-  const [pName,pText]=avgE>=80?['Integraattori','Rakensit lyhyitä ja siistejä yhteyksiä ilman turhia paloja.']:s.fails>=3?['Kokeilija','Opit virheistä. Jokainen vuoto näytti, missä tieto pysähtyy.']:lv('map')+lv('auto')>=3?['Prosessikehittäjä','Selvitit ensin prosessin ja automatisoit vasta sitten.']:['Tasapainoinen IT-johtaja','Yhdistit järjestelmät ja pidit työjonon hallinnassa.'];
+  const [pName,pText]=avgE>=80?$t(['Integraattori','Rakensit lyhyitä ja siistejä yhteyksiä ilman turhia paloja.'],['Integrator','You built short, clean connections without wasted pieces.']):s.fails>=3?$t(['Kokeilija','Opit virheistä. Jokainen vuoto näytti, missä tieto pysähtyy.'],['Experimenter','You learned from mistakes. Every leak showed where data gets stuck.']):lv('map')+lv('auto')>=3?$t(['Prosessikehittäjä','Selvitit ensin prosessin ja automatisoit vasta sitten.'],['Process Developer','You mapped the process first and automated after.']):$t(['Tasapainoinen IT-johtaja','Yhdistit järjestelmät ja pidit työjonon hallinnassa.'],['Balanced IT Leader','You connected the systems and kept the work queue under control.']);
   R.worldEnd({key:'w2',num:'02',world:'Connect',title:'Data Connector',img:'connect',score:w.score,idx,pName,pText,next:'Optimize',
     dims:{prod:avgE,sec:100-s.fails*15,cost:100-(s.replaced||0)*6},
-    line:'Sain tiedon liikkumaan ilman manuaalisia siirtoja.',levelNote:'Taso lasketaan tehokkuudesta, vuodoista ja investoinneista.',
-    real:[`<b>Manuaaliset siirrot.</b> Keskimääräinen tehokkuutesi oli ${Math.round(avgE)} %. Oikeassa yrityksessä jokainen kopioi ja liitä -vaihe on työtä, jota kukaan ei laske kustannukseksi.`,
+    line:$t('Sain tiedon liikkumaan ilman manuaalisia siirtoja.','I got the data moving without manual transfers.'),levelNote:$t('Taso lasketaan tehokkuudesta, vuodoista ja investoinneista.','The level is based on efficiency, leaks and investments.'),
+    real:$t([`<b>Manuaaliset siirrot.</b> Keskimääräinen tehokkuutesi oli ${Math.round(avgE)} %. Oikeassa yrityksessä jokainen kopioi ja liitä -vaihe on työtä, jota kukaan ei laske kustannukseksi.`,
       `<b>Prosessikartoitus.</b> ${lv('map')?'Purit esteitä ennen rakentamista.':'Rakensit esteiden ympäri ilman kartoitusta.'} Roivon IT360-kartoitus näyttää, missä tieto pysähtyy ja mitkä järjestelmät eivät keskustele keskenään.`,
-      `<b>Omistajuus.</b> Pelissä yksi vuoto pysäytti koko prosessin. Roivo määrittää jokaiselle integraatiolle omistajan, jotta vika korjataan ennen kuin työjono kasvaa.`]});
+      `<b>Omistajuus.</b> Pelissä yksi vuoto pysäytti koko prosessin. Roivo määrittää jokaiselle integraatiolle omistajan, jotta vika korjataan ennen kuin työjono kasvaa.`],[`<b>Manual transfers.</b> Your average efficiency was ${Math.round(avgE)}%. In a real company, every copy-and-paste step is work nobody counts as a cost.`,
+      `<b>Process mapping.</b> ${lv('map')?'You cleared obstacles before building.':'You built around obstacles without mapping first.'} Roivo’s IT360 assessment shows where data gets stuck and which systems don’t talk to each other.`,
+      `<b>Ownership.</b> In the game, a single leak stopped the whole process. Roivo assigns an owner to every integration so faults get fixed before the work queue grows.`])});
 }
-function pause(){running=false;R.showPanel(`<div class="kick">Tauko</div><h2>Prosessi pysäytetty</h2>${R.note('w2')}<div class="row"><button class="btn" id="res">Jatka</button><button class="btn ghost" id="rl">Säännöt</button><button class="btn ghost" id="rst">Aloita prosessi alusta</button><button class="btn ghost" id="hb">Päävalikkoon</button></div>`);
+function pause(){running=false;R.showPanel(`<div class="kick">${$t('Tauko','Paused')}</div><h2>${$t('Prosessi pysäytetty','Process paused')}</h2>${R.note('w2')}<div class="row"><button class="btn" id="res">${$t('Jatka','Resume')}</button><button class="btn ghost" id="rl">${$t('Säännöt','Rules')}</button><button class="btn ghost" id="rst">${$t('Aloita prosessi alusta','Restart process')}</button><button class="btn ghost" id="hb">${$t('Päävalikkoon','Main menu')}</button></div>`);
   $('#rl').onclick=()=>R.rules('w2',pause);$('#res').onclick=()=>{R.hidePanel();running=true;last=performance.now();raf=requestAnimationFrame(loop)};$('#rst').onclick=()=>{SAVE.cash=G.cash0;R.hidePanel();newRound()};$('#hb').onclick=()=>{SAVE.cash=G.cash0;R.persist();R.toHub()}}
 
 // ---------- syöte ----------
@@ -176,7 +180,7 @@ function place(x,y){
   const L=G.L;if(x<1||x>L.COLS-2||y<0||y>=L.ROWS)return;
   const c=G.grid[y][x];if(c&&(c.block||c.fill))return;
   if(G.flows.some(f=>!f.done&&f.x===x&&f.y===y))return;
-  if(c){const cost=Math.round((lv('api')?20:40)/G.D.cash);SAVE.cash=Math.max(0,SAVE.cash-cost);G.stats.replaced++;G.placed--;api.log('warn',`Rakennettiin uudelleen. Kustannus ${eur(cost)}.`)}
+  if(c){const cost=Math.round((lv('api')?20:40)/G.D.cash);SAVE.cash=Math.max(0,SAVE.cash-cost);G.stats.replaced++;G.placed--;api.log('warn',$t(`Rakennettiin uudelleen. Kustannus ${eur(cost)}.`,`Rebuilt. Cost ${eur(cost)}.`))}
   G.grid[y][x]={type:G.queue.shift()};G.queue.push(newPiece());G.placed++;SFX.buy();
 }
 addEventListener('pointerdown',e=>{if(!G||!running||e.target!==api.cv)return;const [x,y]=cellAt(e);place(x,y)});
@@ -209,7 +213,7 @@ function draw(){
   x.clearRect(0,0,L.W,L.H);
   // jono
   x.fillStyle='rgba(7,3,28,.88)';x.fillRect(0,0,L.land?L.qW:L.W,L.land?L.H:L.qH);
-  x.fillStyle='#E5B65D';x.font='700 13px Figtree';x.textAlign='left';x.fillText('SEURAAVA',L.land?12:10,L.land?24:18);
+  x.fillStyle='#E5B65D';x.font='700 13px Figtree';x.textAlign='left';x.fillText($t('SEURAAVA','NEXT'),L.land?12:10,L.land?24:18);
   const qn=L.land?5:6;
   for(let i=0;i<qn;i++){const sc=i===0?.95:.62,sz=S_*sc;let px,py;
     if(L.land){px=(L.qW-sz)/2;py=34+(i===0?0:S_*.95+(i-1)*S_*.72)}else{px=10+(i===0?0:S_*1.05+(i-1)*S_*.75);py=24}
@@ -222,7 +226,7 @@ function draw(){
   if(G.hover&&G.phase&&running){const [hx,hy]=G.hover;if(hx>=1&&hx<=L.COLS-2&&hy>=0&&hy<L.ROWS){const c=G.grid[hy][hx];if(!c||(!c.block&&!c.fill)){drawPiece(x,G.queue[0],hx*S_,hy*S_,.35);x.strokeStyle='rgba(229,182,93,.6)';x.strokeRect(hx*S_+1,hy*S_+1,S_-2,S_-2)}}}
   for(let y=0;y<L.ROWS;y++)for(let c=0;c<L.COLS;c++){const cell=G.grid[y][c];if(!cell)continue;const px=c*S_,py=y*S_;
     if(cell.block){x.fillStyle=cell.legacy?'rgba(120,100,90,.35)':'rgba(220,123,96,.16)';x.fillRect(px+6,py+6,S_-12,S_-12);x.strokeStyle=cell.legacy?'#8a7a70':'#DC7B60';x.setLineDash([4,3]);x.strokeRect(px+6,py+6,S_-12,S_-12);x.setLineDash([]);
-      x.fillStyle=cell.legacy?'#b9a3a0':'#DC7B60';x.font='700 11px Figtree';x.textAlign='center';x.fillText(cell.legacy?'VANHA':'EXCEL',px+S_/2,py+S_/2-2);x.font='400 10px Figtree';x.fillText(cell.legacy?'järjestelmä':'käsin',px+S_/2,py+S_/2+11);continue}
+      x.fillStyle=cell.legacy?'#b9a3a0':'#DC7B60';x.font='700 11px Figtree';x.textAlign='center';x.fillText(cell.legacy?$t('VANHA','LEGACY'):'EXCEL',px+S_/2,py+S_/2-2);x.font='400 10px Figtree';x.fillText(cell.legacy?$t('järjestelmä','system'):$t('käsin','manual'),px+S_/2,py+S_/2+11);continue}
     drawPiece(x,cell.type,px,py);
     if(cell.fill)for(const f of cell.fill){const fl=G.flows.find(q=>q.pair===f.pair&&q.x===c&&q.y===y&&!q.done&&q.entry===f.entry);x.shadowColor=PCOL[f.pair];x.shadowBlur=10;seg(x,px,py,f.entry,f.exit,S_*.16,PCOL[f.pair],fl?fl.prog:1);x.shadowBlur=0}
   }
@@ -235,7 +239,7 @@ function draw(){
   G.srcs.forEach(s=>box(s,true));G.tgts.forEach(t=>box(t,false));
   // lähdön virta
   for(const f of G.flows)if(f.x===0&&!f.done){x.strokeStyle=PCOL[f.pair];x.lineWidth=S_*.16;x.beginPath();x.moveTo(S_-6,f.y*S_+S_/2);x.lineTo(S_-6+6*f.prog,f.y*S_+S_/2);x.stroke()}
-  if(G.phase==='build'){const tx=`Virtaus alkaa ${Math.ceil(G.cd)} s`;x.font='800 15px Figtree';const tw=x.measureText(tx).width+24;x.fillStyle='rgba(7,3,28,.85)';R.rr(x,L.COLS*S_/2-tw/2,-2,tw,24,8);x.fill();x.fillStyle='#E5B65D';x.textAlign='center';x.fillText(tx,L.COLS*S_/2,15)}
+  if(G.phase==='build'){const tx=$t(`Virtaus alkaa ${Math.ceil(G.cd)} s`,`Flow starts in ${Math.ceil(G.cd)} s`);x.font='800 15px Figtree';const tw=x.measureText(tx).width+24;x.fillStyle='rgba(7,3,28,.85)';R.rr(x,L.COLS*S_/2-tw/2,-2,tw,24,8);x.fill();x.fillStyle='#E5B65D';x.textAlign='center';x.fillText(tx,L.COLS*S_/2,15)}
   x.textAlign='center';x.font='800 14px Figtree';for(const f of G.floats){x.globalAlpha=Math.min(1,f.l*1.6);x.fillStyle='#E5B65D';x.fillText(f.t,f.x-ox,f.y-oy-(0.9-f.l)*24)}x.globalAlpha=1;
   x.restore();
 }
